@@ -1,0 +1,52 @@
+services:
+  - type: web
+    name: bookora-backend
+    runtime: node
+    rootDir: backend
+    buildCommand: npm install --legacy-peer-deps && npm run prisma:generate && npm run build
+    preDeployCommand: npm run prisma:push
+    startCommand: npm run start
+    healthCheckPath: /health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: DATABASE_URL
+        fromDatabase:
+          name: bookora-db
+          property: connectionString
+      - key: JWT_SECRET
+        generateValue: true
+    buildFilter:
+      paths:
+        - backend/**
+        - render.yaml
+
+  - type: web
+    name: bookora-frontend
+    runtime: node
+    rootDir: frontend
+    buildCommand: npm install --legacy-peer-deps && npm run build
+    startCommand: npm run start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: NEXT_PUBLIC_API_URL
+        value: /backend
+      - key: BACKEND_HOSTPORT
+        fromService:
+          type: web
+          name: bookora-backend
+          property: hostport
+      - key: NEXTAUTH_SECRET
+        generateValue: true
+      - key: NEXTAUTH_URL
+        sync: false
+    buildFilter:
+      paths:
+        - frontend/**
+        - render.yaml
+
+databases:
+  - name: bookora-db
+    databaseName: bookora
+    user: bookora

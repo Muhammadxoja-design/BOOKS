@@ -90,8 +90,40 @@ This gives you one public frontend domain while forwarding `/backend/*` from the
 
 Do not deploy the repository root as a single combined frontend+backend Vercel app. According to Vercel monorepo docs, each app directory should be its own Vercel project, and if you want one public domain you should proxy one project to the other with rewrites.
 
+## Render deployment
+
+Preferred Render setup is a Blueprint from [render.yaml](/home/fsociety/Codes/BOOKS/render.yaml).
+
+### Services created by the Blueprint
+
+- `bookora-db`: PostgreSQL database
+- `bookora-backend`: Node/Express API service
+- `bookora-frontend`: Next.js web service
+
+### How frontend and backend work together on Render
+
+- The public site is the frontend Render URL.
+- Browser requests go to `/backend/*` on the frontend domain.
+- Next.js rewrites proxy `/backend/*` to the backend service over Render networking.
+- NextAuth server-side credential login uses `BACKEND_HOSTPORT` or `BACKEND_INTERNAL_URL`.
+
+### Render env notes
+
+- `NEXT_PUBLIC_API_URL=/backend`
+- `BACKEND_HOSTPORT` is injected from the backend service automatically by the Blueprint
+- `NEXTAUTH_URL` should be set in Render after deploy to your frontend public domain
+- `JWT_SECRET` and `NEXTAUTH_SECRET` are generated automatically by the Blueprint
+
+### Render deploy steps
+
+1. Push this repo to GitHub.
+2. In Render, create a new Blueprint and point it to this repository.
+3. Approve the services from [render.yaml](/home/fsociety/Codes/BOOKS/render.yaml).
+4. After first deploy, open the `bookora-frontend` service settings and set `NEXTAUTH_URL` to the frontend Render domain or your custom domain.
+5. If you want demo content, open the backend shell and run `npm run seed`.
+
 ## Notes
 
-- Frontend build passes with image optimization warnings because seeded remote assets use raw `<img>` tags for portability.
+- Frontend build is clean and production-buildable.
 - Backend uses Prisma + PostgreSQL and expects a valid `DATABASE_URL`.
 - Product architecture, page map, and route inventory live in [PROJECT_GUIDE.md](/home/fsociety/Codes/BOOKS/PROJECT_GUIDE.md).

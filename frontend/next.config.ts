@@ -1,6 +1,18 @@
 import type { NextConfig } from "next";
 
-const backendInternalUrl = process.env.BACKEND_INTERNAL_URL?.replace(/\/$/, "");
+const resolveBackendInternalUrl = () => {
+  if (process.env.BACKEND_INTERNAL_URL) {
+    return process.env.BACKEND_INTERNAL_URL.replace(/\/$/, "");
+  }
+
+  if (process.env.BACKEND_HOSTPORT) {
+    return `http://${process.env.BACKEND_HOSTPORT}/api`;
+  }
+
+  return "";
+};
+
+const backendInternalUrl = resolveBackendInternalUrl();
 
 const nextConfig: NextConfig = {
   images: {

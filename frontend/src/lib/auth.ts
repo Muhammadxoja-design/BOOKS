@@ -1,10 +1,19 @@
 import NextAuth from "next-auth";
 import Credentials from "next-auth/providers/credentials";
 
-const apiUrl =
-  process.env.BACKEND_INTERNAL_URL ??
-  process.env.NEXT_PUBLIC_API_URL ??
-  "http://localhost:5000/api";
+const resolveApiUrl = () => {
+  if (process.env.BACKEND_INTERNAL_URL) {
+    return process.env.BACKEND_INTERNAL_URL.replace(/\/$/, "");
+  }
+
+  if (process.env.BACKEND_HOSTPORT) {
+    return `http://${process.env.BACKEND_HOSTPORT}/api`;
+  }
+
+  return process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:5000/api";
+};
+
+const apiUrl = resolveApiUrl();
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
   session: {
