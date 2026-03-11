@@ -8,7 +8,7 @@
   ],
   "scripts": {
     "dev": "concurrently --names \"FRONTEND,BACKEND\" --prefix-colors \"cyan,magenta\" \"npm run dev --workspace=frontend\" \"npm run dev --workspace=backend\"",
-    "install:all": "npm install && npm install --workspace=frontend && npm install --workspace=backend",
+    "install:all": "npm install --legacy-peer-deps && npm install --workspace=frontend --legacy-peer-deps && npm install --workspace=backend --legacy-peer-deps",
     "build": "npm run build --workspace=frontend && npm run build --workspace=backend",
     "seed": "npm run seed --workspace=backend",
     "prisma:push": "npm run prisma:push --workspace=backend",
