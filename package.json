@@ -1,0 +1,20 @@
+{
+  "name": "books-platform",
+  "version": "1.0.0",
+  "private": true,
+  "workspaces": [
+    "frontend",
+    "backend"
+  ],
+  "scripts": {
+    "dev": "concurrently --names \"FRONTEND,BACKEND\" --prefix-colors \"cyan,magenta\" \"npm run dev --workspace=frontend\" \"npm run dev --workspace=backend\"",
+    "install:all": "npm install && npm install --workspace=frontend && npm install --workspace=backend",
+    "build": "npm run build --workspace=frontend && npm run build --workspace=backend",
+    "seed": "npm run seed --workspace=backend",
+    "prisma:push": "npm run prisma:push --workspace=backend",
+    "prisma:generate": "npm run prisma:generate --workspace=backend"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.2"
+  }
+}
