@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { FormEvent, useEffect, useState } from "react";
 import { MessageSquareMore, NotebookPen, Sparkles, Trophy } from "lucide-react";
@@ -132,19 +133,25 @@ export function BookExperiencePage({
       <Surface className="overflow-hidden">
         <div className="relative overflow-hidden">
           <div className="absolute inset-0">
-            <img
+            <Image
               src={book.backdropImage ?? book.coverImage}
               alt={book.title}
-              className="h-full w-full object-cover opacity-20"
+              fill
+              sizes="100vw"
+              className="object-cover opacity-20"
             />
             <div className="absolute inset-0 bg-[linear-gradient(135deg,rgba(2,6,23,0.92),rgba(8,47,73,0.8),rgba(225,124,57,0.35))]" />
           </div>
           <div className="relative grid gap-8 p-8 md:p-10 lg:grid-cols-[0.8fr_1.2fr]">
-            <img
-              src={book.coverImage}
-              alt={book.title}
-              className="aspect-[4/5] w-full rounded-[32px] object-cover shadow-2xl"
-            />
+            <div className="relative aspect-[4/5] w-full overflow-hidden rounded-[32px] shadow-2xl">
+              <Image
+                src={book.coverImage}
+                alt={book.title}
+                fill
+                sizes="(max-width: 1024px) 100vw, 33vw"
+                className="object-cover"
+              />
+            </div>
 
             <div className="space-y-6 text-white">
               <div className="flex flex-wrap gap-3">

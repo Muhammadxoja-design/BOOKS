@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { ArrowRight, Headphones, Library, ShoppingBag, Sparkles, Trophy } from "lucide-react";
@@ -204,11 +205,15 @@ export default function HomePage() {
                       href={book.format === "STORE" ? "/store" : `/${book.format === "AUDIO" ? "audio-books" : "pdf-books"}/${book.slug}`}
                       className="flex items-center gap-4 rounded-[22px] bg-[color:var(--bg)] p-3 transition hover:-translate-y-0.5"
                     >
-                      <img
-                        src={book.coverImage}
-                        alt={book.title}
-                        className="h-20 w-16 rounded-2xl object-cover"
-                      />
+                      <div className="relative h-20 w-16 overflow-hidden rounded-2xl">
+                        <Image
+                          src={book.coverImage}
+                          alt={book.title}
+                          fill
+                          sizes="64px"
+                          className="object-cover"
+                        />
+                      </div>
                       <div>
                         <p className="font-semibold text-[color:var(--foreground)]">{book.title}</p>
                         <p className="mt-1 text-sm text-[color:var(--muted-foreground)]">{book.author}</p>

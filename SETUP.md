@@ -60,6 +60,31 @@ cd backend && npm run build
 cd frontend && npm run build
 ```
 
+## Vercel deployment
+
+Use 2 separate Vercel projects.
+
+### 1. Backend API project
+
+- Project root: repository root
+- Config file used: [vercel.json](/home/fsociety/Codes/BOOKS/vercel.json)
+- Result: `/api/*` routes served from [api/index.ts](/home/fsociety/Codes/BOOKS/api/index.ts)
+- Required env:
+  - `DATABASE_URL`
+  - `JWT_SECRET`
+
+### 2. Frontend project
+
+- Project root directory: `frontend`
+- Framework: Next.js
+- Output Directory: leave empty
+- Required env:
+  - `NEXT_PUBLIC_API_URL=https://books-kappa-drab.vercel.app/api`
+  - `NEXTAUTH_SECRET`
+  - `NEXTAUTH_URL=https://<your-frontend-domain>`
+
+Do not deploy the repository root as a single combined frontend+backend Vercel app. In this repo, root Vercel config is for the backend API project only.
+
 ## Notes
 
 - Frontend build passes with image optimization warnings because seeded remote assets use raw `<img>` tags for portability.

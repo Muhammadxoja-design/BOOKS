@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
@@ -69,11 +70,15 @@ export default function CartPage() {
               <div className="space-y-4">
                 {cart.items.map((item) => (
                   <Surface key={item.id} className="flex flex-wrap items-center gap-4 p-5">
-                    <img
-                      src={item.book.coverImage}
-                      alt={item.book.title}
-                      className="h-28 w-20 rounded-[18px] object-cover"
-                    />
+                    <div className="relative h-28 w-20 overflow-hidden rounded-[18px]">
+                      <Image
+                        src={item.book.coverImage}
+                        alt={item.book.title}
+                        fill
+                        sizes="80px"
+                        className="object-cover"
+                      />
+                    </div>
                     <div className="min-w-0 flex-1">
                       <p className="text-xl font-semibold text-[color:var(--foreground)]">
                         {item.book.title}

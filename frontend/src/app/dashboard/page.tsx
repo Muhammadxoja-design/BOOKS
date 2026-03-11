@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { ArrowRight, Flame, Headphones, Library, Sparkles, Trophy } from "lucide-react";
@@ -24,11 +25,15 @@ function ContinueCard({ item }: { item: ProgressRecord }) {
       className="rounded-[24px] border border-[color:var(--border)] bg-[color:var(--bg)] p-5 transition hover:-translate-y-1"
     >
       <div className="flex gap-4">
-        <img
-          src={item.book.coverImage}
-          alt={item.book.title}
-          className="h-28 w-20 rounded-[18px] object-cover"
-        />
+        <div className="relative h-28 w-20 overflow-hidden rounded-[18px]">
+          <Image
+            src={item.book.coverImage}
+            alt={item.book.title}
+            fill
+            sizes="80px"
+            className="object-cover"
+          />
+        </div>
         <div className="min-w-0 flex-1">
           <p className="text-sm text-[color:var(--muted-foreground)]">{item.book.author}</p>
           <h3 className="mt-2 text-xl font-semibold text-[color:var(--foreground)]">

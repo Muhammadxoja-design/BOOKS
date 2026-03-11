@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 import { Headphones, Library, ShoppingBag, Star } from "lucide-react";
 import { Pill } from "@/components/ui/pill";
@@ -29,10 +30,12 @@ export function BookCard({
   return (
     <Surface className="group overflow-hidden">
       <div className="relative aspect-[4/4.7] overflow-hidden">
-        <img
+        <Image
           src={book.coverImage}
           alt={book.title}
-          className="h-full w-full object-cover transition duration-500 group-hover:scale-105"
+          fill
+          sizes={compact ? "(max-width: 768px) 100vw, 33vw" : "(max-width: 768px) 100vw, (max-width: 1280px) 50vw, 33vw"}
+          className="object-cover transition duration-500 group-hover:scale-105"
         />
         <div className="absolute inset-0 bg-[linear-gradient(180deg,transparent,rgba(2,6,23,0.85))]" />
         <div className="absolute left-4 right-4 top-4 flex items-center justify-between">

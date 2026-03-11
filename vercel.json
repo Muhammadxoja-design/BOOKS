@@ -1,5 +1,7 @@
 {
   "version": 2,
+  "installCommand": "npm install --legacy-peer-deps",
+  "buildCommand": "npm run prisma:generate --workspace=backend",
   "rewrites": [
     {
       "source": "/api/:path*",
@@ -8,8 +10,8 @@
   ],
   "functions": {
     "api/index.ts": {
-      "runtime": "@vercel/node",
-      "includeFiles": "backend/prisma/schema.prisma"
+      "includeFiles": "backend/prisma/**",
+      "maxDuration": 30
     }
   }
 }
