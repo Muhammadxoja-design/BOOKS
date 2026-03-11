@@ -1,9 +1,7 @@
 "use client";
 
-import Navbar from "@/components/layout/Navbar";
 import { Users, BookOpen, DollarSign, Settings, Activity, Plus } from "lucide-react";
-import { useState, useEffect } from "react";
-import axios from "axios";
+import { useEffect } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 
@@ -12,7 +10,7 @@ export default function AdminPage() {
   const router = useRouter();
 
   useEffect(() => {
-    if (status === "unauthenticated" || (session?.user as any)?.role !== "ADMIN") {
+    if (status === "unauthenticated" || (session?.user as { role?: string })?.role !== "ADMIN") {
       router.push("/");
     }
   }, [status, session, router]);

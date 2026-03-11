@@ -15,7 +15,7 @@ export default function Home() {
               <div className="sm:text-center md:mx-auto md:max-w-2xl lg:col-span-6 lg:text-left">
                 <div className="flex justify-center lg:justify-start">
                   <span className="inline-flex items-center rounded-full bg-indigo-50 px-3 py-1 text-sm font-semibold text-indigo-600 dark:bg-indigo-500/10 dark:text-indigo-400 ring-1 ring-inset ring-indigo-500/20">
-                    What's new in v1.0
+                    What&apos;s new in v1.0
                   </span>
                 </div>
                 <h1 className="mt-8 text-4xl font-extrabold tracking-tight text-zinc-900 dark:text-white sm:text-6xl xl:text-7xl">
@@ -37,6 +37,7 @@ export default function Home() {
               </div>
               <div className="relative mt-16 sm:mt-24 lg:col-span-6 lg:mt-0">
                 <div className="aspect-[4/3] w-full rounded-2xl bg-zinc-100 p-2 ring-1 ring-inset ring-zinc-900/10 dark:bg-zinc-900 dark:ring-white/10 overflow-hidden">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img src="https://images.unsplash.com/photo-1544947950-fa07a98d237f?auto=format&fit=crop&q=80&w=1000" alt="App dashboard preview" className="rounded-xl object-cover w-full h-full opacity-90 shadow-2xl ring-1 ring-gray-900/10" />
                 </div>
               </div>

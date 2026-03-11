@@ -2,9 +2,7 @@
 
 import Navbar from "@/components/layout/Navbar";
 import {
-  BookOpen,
   Bookmark,
-  Star,
   ChevronLeft,
   ChevronRight,
   Settings,

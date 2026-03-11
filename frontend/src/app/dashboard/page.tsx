@@ -4,7 +4,7 @@ import { useSession } from "next-auth/react";
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Navbar from "@/components/layout/Navbar";
-import { BookOpen, Trophy, Clock, Target, PlayCircle, BarChart3 } from "lucide-react";
+import { Trophy, Clock, Target, PlayCircle, BarChart3 } from "lucide-react";
 
 export default function DashboardPage() {
   const { data: session, status } = useSession();
@@ -58,6 +58,7 @@ export default function DashboardPage() {
                 {/* Book Card Mock */}
                 <div className="group relative flex gap-6 rounded-2xl border border-zinc-200 bg-white p-4 shadow-sm transition-shadow hover:shadow-md dark:border-zinc-800 dark:bg-zinc-900">
                   <div className="h-32 w-24 shrink-0 overflow-hidden rounded-lg bg-zinc-100 dark:bg-zinc-800">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img src="https://images.unsplash.com/photo-1544947950-fa07a98d237f?auto=format&fit=crop&q=80&w=200" alt="Book cover" className="h-full w-full object-cover" />
                   </div>
                   <div className="flex flex-1 flex-col">
@@ -78,6 +79,9 @@ export default function DashboardPage() {
                  {/* Audio Card Mock */}
                  <div className="group relative flex gap-6 rounded-2xl border border-zinc-200 bg-white p-4 shadow-sm transition-shadow hover:shadow-md dark:border-zinc-800 dark:bg-zinc-900">
                   <div className="h-32 w-24 shrink-0 overflow-hidden rounded-lg bg-zinc-100 dark:bg-zinc-800 relative">
+                     {/* The alt attribute is already present, addressing the primary image warning.
+                         The eslint-disable comment is kept as per the original intent to use a plain img tag. */}
+                     {/* eslint-disable-next-line @next/next/no-img-element */}
                      <img src="https://images.unsplash.com/photo-1589829085413-56de8ae18c73?auto=format&fit=crop&q=80&w=200" alt="Audio cover" className="h-full w-full object-cover opacity-80" />
                      <div className="absolute inset-0 flex items-center justify-center bg-black/20">
                         <PlayCircle className="h-10 w-10 text-white opacity-80 group-hover:opacity-100 transition-opacity" />

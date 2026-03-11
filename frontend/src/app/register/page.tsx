@@ -40,8 +40,12 @@ export default function RegisterPage() {
         router.push("/login?registered=true");
       }
 
-    } catch (err: any) {
-      setError(err.response?.data?.message || "Registration failed");
+    } catch (err: unknown) {
+      if (axios.isAxiosError(err)) {
+        setError(err.response?.data?.message || "Registration failed");
+      } else {
+        setError("An unexpected error occurred");
+      }
       setLoading(false);
     }
   };

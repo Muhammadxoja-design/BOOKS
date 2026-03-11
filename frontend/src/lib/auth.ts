@@ -30,7 +30,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
             };
           }
           return null;
-        } catch (error) {
+        } catch {
           return null;
         }
       }
@@ -40,16 +40,16 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     async jwt({ token, user }) {
       if (user) {
         token.id = user.id;
-        token.role = (user as any).role;
-        token.accessToken = (user as any).token;
+        token.role = (user as { role?: string }).role;
+        token.accessToken = (user as { token?: string }).token;
       }
       return token;
     },
     async session({ session, token }) {
       if (token && session.user) {
         session.user.id = token.id as string;
-        (session.user as any).role = token.role;
-        (session as any).accessToken = token.accessToken;
+        (session.user as { role?: string }).role = token.role as string;
+        (session as { accessToken?: string }).accessToken = token.accessToken as string;
       }
       return session;
     }

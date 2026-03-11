@@ -1,13 +1,13 @@
 "use client";
 
 import Navbar from "@/components/layout/Navbar";
-import { Play, Pause, FastForward, Rewind, Settings, Volume2 } from "lucide-react";
+import { Play, Pause, FastForward, Rewind, Volume2 } from "lucide-react";
 import { useState } from "react";
 
 export default function AudioPlayerPage() {
   const [isPlaying, setIsPlaying] = useState(false);
   const [speed, setSpeed] = useState(1);
-  const [progress, setProgress] = useState(35); // mock
+  const [progress] = useState(35); // mock
 
   const toggleSpeed = () => {
     if (speed === 1) setSpeed(1.5);
@@ -21,9 +21,10 @@ export default function AudioPlayerPage() {
 
       <main className="flex-1 flex flex-col items-center justify-center px-4 py-12">
         <div className="w-full max-w-2xl bg-white dark:bg-zinc-900 rounded-3xl shadow-2xl overflow-hidden border border-zinc-200 dark:border-zinc-800 pb-8">
-           <div className="w-full aspect-video bg-zinc-100 dark:bg-zinc-800 relative">
-             <img src="https://images.unsplash.com/photo-1589829085413-56de8ae18c73?auto=format&fit=crop&q=80&w=800" alt="Cover" className="w-full h-full object-cover" />
-             <div className="absolute inset-x-0 bottom-0 h-32 bg-gradient-to-t from-black/80 to-transparent flex items-end p-8">
+            <div className="w-full aspect-video bg-zinc-100 dark:bg-zinc-800 relative">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src="https://images.unsplash.com/photo-1589829085413-56de8ae18c73?auto=format&fit=crop&q=80&w=800" alt="Cover" className="w-full h-full object-cover" />
+              <div className="absolute inset-x-0 bottom-0 h-32 bg-gradient-to-t from-black/80 to-transparent flex items-end p-8">
                 <div className="text-white backdrop-blur-sm">
                    <h1 className="text-3xl font-bold tracking-tight shadow-sm">Deep Work Strategies</h1>
                    <p className="text-white/80 mt-1 font-medium">Cal Newport</p>

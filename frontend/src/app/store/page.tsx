@@ -1,5 +1,5 @@
 import Navbar from "@/components/layout/Navbar";
-import { ShoppingBag, Star, Plus, Check } from "lucide-react";
+import { ShoppingBag, Plus } from "lucide-react";
 
 export default function StorePage() {
   const storeItems = [
