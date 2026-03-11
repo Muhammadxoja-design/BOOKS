@@ -1,13 +1,11 @@
 import { Request, Response } from 'express';
-import { PrismaClient } from '@prisma/client';
-
-const prisma = new PrismaClient();
+import prisma from '../lib/prisma';
 
 export const getBookReviews = async (req: Request, res: Response) => {
   try {
     const { bookId } = req.params;
     const reviews = await prisma.review.findMany({
-      where: { bookId },
+      where: { bookId: bookId as string },
       include: {
         user: { select: { name: true, avatar: true } },
       },
@@ -27,7 +25,7 @@ export const addReview = async (req: Request, res: Response) => {
 
     // Check if user has already reviewed
     const existingReview = await prisma.review.findFirst({
-        where: { userId, bookId }
+        where: { userId: userId as string, bookId: bookId as string }
     });
 
     if (existingReview) {
@@ -36,8 +34,8 @@ export const addReview = async (req: Request, res: Response) => {
 
     const review = await prisma.review.create({
       data: {
-        userId,
-        bookId,
+        userId: userId as string,
+        bookId: bookId as string,
         rating,
         comment,
       },

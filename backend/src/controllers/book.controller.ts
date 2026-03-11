@@ -29,7 +29,7 @@ export const getBookById = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
     const book = await prisma.book.findUnique({
-      where: { id },
+      where: { id: id as string },
       include: {
         reviews: {
           include: { user: { select: { name: true, avatar: true } } },
