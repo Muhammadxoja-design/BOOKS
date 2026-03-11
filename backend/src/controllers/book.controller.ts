@@ -1,7 +1,6 @@
 import { Request, Response } from 'express';
-import { PrismaClient, BookType } from '@prisma/client';
-
-const prisma = new PrismaClient();
+import { BookType } from '@prisma/client';
+import prisma from '../lib/prisma';
 
 export const getAllBooks = async (req: Request, res: Response) => {
   try {
