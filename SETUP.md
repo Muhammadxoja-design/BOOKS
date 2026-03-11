@@ -69,6 +69,8 @@ Use 2 separate Vercel projects.
 - Project root: repository root
 - Config file used: [vercel.json](/home/fsociety/Codes/BOOKS/vercel.json)
 - Result: `/api/*` routes served from [api/index.ts](/home/fsociety/Codes/BOOKS/api/index.ts)
+- Root URL `/` returns API status payload
+- Health URL `/health` returns health payload
 - Required env:
   - `DATABASE_URL`
   - `JWT_SECRET`

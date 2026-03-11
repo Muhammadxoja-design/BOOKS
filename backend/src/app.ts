@@ -22,6 +22,27 @@ app.use(
 );
 app.use(express.json({ limit: "1mb" }));
 
+app.get("/", (_req, res) => {
+  res.status(200).json({
+    name: "Bookora API",
+    status: "ok",
+    docs: {
+      health: "/health",
+      apiHealth: "/api/health",
+      catalog: "/api/catalog/home",
+    },
+    timestamp: new Date().toISOString(),
+  });
+});
+
+app.get("/health", (_req, res) => {
+  res.status(200).json({
+    status: "ok",
+    service: "bookora-api",
+    timestamp: new Date().toISOString(),
+  });
+});
+
 app.get("/api/health", (_req, res) => {
   res.status(200).json({
     status: "ok",

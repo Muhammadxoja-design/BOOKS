@@ -4,6 +4,14 @@
   "buildCommand": "npm run prisma:generate --workspace=backend",
   "rewrites": [
     {
+      "source": "/",
+      "destination": "/api/index.ts"
+    },
+    {
+      "source": "/health",
+      "destination": "/api/index.ts"
+    },
+    {
       "source": "/api/:path*",
       "destination": "/api/index.ts"
     }
