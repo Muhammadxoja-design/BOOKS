@@ -1,10 +1,10 @@
-import { NextAuthOptions } from "next-auth";
-import CredentialsProvider from "next-auth/providers/credentials";
+import NextAuth from "next-auth";
+import Credentials from "next-auth/providers/credentials";
 import axios from "axios";
 
-export const authOptions: NextAuthOptions = {
+export const { handlers, auth, signIn, signOut } = NextAuth({
   providers: [
-    CredentialsProvider({
+    Credentials({
       name: "Credentials",
       credentials: {
         email: { label: "Email", type: "email" },
@@ -14,7 +14,8 @@ export const authOptions: NextAuthOptions = {
         if (!credentials?.email || !credentials?.password) return null;
 
         try {
-          const res = await axios.post("http://localhost:5000/api/auth/login", {
+          const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:5000";
+          const res = await axios.post(`${backendUrl}/api/auth/login`, {
             email: credentials.email,
             password: credentials.password,
           });
@@ -46,7 +47,7 @@ export const authOptions: NextAuthOptions = {
     },
     async session({ session, token }) {
       if (token && session.user) {
-        (session.user as any).id = token.id;
+        session.user.id = token.id as string;
         (session.user as any).role = token.role;
         (session as any).accessToken = token.accessToken;
       }
@@ -59,5 +60,6 @@ export const authOptions: NextAuthOptions = {
   session: {
     strategy: "jwt",
   },
-  secret: process.env.NEXTAUTH_SECRET || "supersecretnextauthkey",
-};
+  secret: process.env.NEXTAUTH_SECRET,
+});
+
