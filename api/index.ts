@@ -1,4 +1,4 @@
-import app from '../src/app';
+import app from '../backend/src/app';
 
 // Export the express app as a serverless function for Vercel
 export default app;
