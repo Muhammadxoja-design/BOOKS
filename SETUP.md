@@ -81,11 +81,14 @@ Use 2 separate Vercel projects.
 - Framework: Next.js
 - Output Directory: leave empty
 - Required env:
-  - `NEXT_PUBLIC_API_URL=https://books-kappa-drab.vercel.app/api`
+  - `NEXT_PUBLIC_API_URL=/backend`
+  - `BACKEND_INTERNAL_URL=https://books-kappa-drab.vercel.app/api`
   - `NEXTAUTH_SECRET`
   - `NEXTAUTH_URL=https://<your-frontend-domain>`
 
-Do not deploy the repository root as a single combined frontend+backend Vercel app. In this repo, root Vercel config is for the backend API project only.
+This gives you one public frontend domain while forwarding `/backend/*` from the frontend project to the backend Vercel project.
+
+Do not deploy the repository root as a single combined frontend+backend Vercel app. According to Vercel monorepo docs, each app directory should be its own Vercel project, and if you want one public domain you should proxy one project to the other with rewrites.
 
 ## Notes
 
