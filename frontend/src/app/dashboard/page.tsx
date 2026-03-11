@@ -1,135 +1,283 @@
 "use client";
 
+import Link from "next/link";
+import { useEffect, useState } from "react";
+import { ArrowRight, Flame, Headphones, Library, Sparkles, Trophy } from "lucide-react";
 import { useSession } from "next-auth/react";
-import { useEffect } from "react";
-import { useRouter } from "next/navigation";
-import Navbar from "@/components/layout/Navbar";
-import { Trophy, Clock, Target, PlayCircle, BarChart3 } from "lucide-react";
+import { AuthGuard } from "@/components/features/auth-guard";
+import { BookCard } from "@/components/books/book-card";
+import { Pill } from "@/components/ui/pill";
+import { ProgressBar } from "@/components/ui/progress-bar";
+import { Surface } from "@/components/ui/surface";
+import { apiFetch, getToken } from "@/lib/api";
+import { DashboardData, ProgressRecord } from "@/lib/types";
+import { formatRelativeDate, resolveBookHref } from "@/lib/utils";
 
-export default function DashboardPage() {
-  const { data: session, status } = useSession();
-  const router = useRouter();
-
-  useEffect(() => {
-    if (status === "unauthenticated") {
-      router.push("/login");
-    }
-  }, [status, router]);
-
-  if (status === "loading") {
-    return <div className="flex h-screen items-center justify-center">Loading...</div>;
+function ContinueCard({ item }: { item: ProgressRecord }) {
+  if (!item.book) {
+    return null;
   }
 
-  if (!session) return null;
+  return (
+    <Link
+      href={resolveBookHref(item.book)}
+      className="rounded-[24px] border border-[color:var(--border)] bg-[color:var(--bg)] p-5 transition hover:-translate-y-1"
+    >
+      <div className="flex gap-4">
+        <img
+          src={item.book.coverImage}
+          alt={item.book.title}
+          className="h-28 w-20 rounded-[18px] object-cover"
+        />
+        <div className="min-w-0 flex-1">
+          <p className="text-sm text-[color:var(--muted-foreground)]">{item.book.author}</p>
+          <h3 className="mt-2 text-xl font-semibold text-[color:var(--foreground)]">
+            {item.book.title}
+          </h3>
+          <div className="mt-4 space-y-2">
+            <div className="flex items-center justify-between text-xs text-[color:var(--muted-foreground)]">
+              <span>Progress</span>
+              <span>{Math.round(item.percentage)}%</span>
+            </div>
+            <ProgressBar value={item.percentage} />
+          </div>
+        </div>
+      </div>
+    </Link>
+  );
+}
+
+export default function DashboardPage() {
+  const { data: session } = useSession();
+  const token = getToken(session ?? null);
+  const [data, setData] = useState<DashboardData | null>(null);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    if (!token) {
+      return;
+    }
+
+    const loadDashboard = async () => {
+      try {
+        const response = await apiFetch<DashboardData>("/users/dashboard", { token });
+        setData(response);
+      } catch (loadError) {
+        setError(loadError instanceof Error ? loadError.message : "Unable to load dashboard.");
+      }
+    };
+
+    void loadDashboard();
+  }, [token]);
 
   return (
-    <div className="min-h-screen bg-zinc-50 dark:bg-black font-sans">
-      <Navbar />
+    <AuthGuard>
+      {error ? (
+        <Surface className="p-10 text-center text-red-300">{error}</Surface>
+      ) : !data ? (
+        <Surface className="p-10 text-center">Loading dashboard...</Surface>
+      ) : (
+        <div className="page-grid">
+          <Surface className="overflow-hidden p-8 md:p-10">
+            <div className="grid gap-8 lg:grid-cols-[1.1fr_0.9fr]">
+              <div>
+                <Pill>
+                  <Sparkles className="h-3.5 w-3.5" />
+                  User dashboard
+                </Pill>
+                <h1 className="mt-5 section-title text-[color:var(--foreground)]">
+                  {data.user.name}, your learning system is active.
+                </h1>
+                <p className="mt-5 max-w-2xl text-lg leading-8 text-[color:var(--muted-foreground)]">
+                  Monitor reading and listening, protect streaks, collect points, and move through
+                  recommendations designed from your behavior.
+                </p>
+              </div>
 
-      <main className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
-        <div className="mb-10 flex flex-col justify-between gap-4 md:flex-row md:items-end">
-          <div>
-            <h1 className="text-3xl font-bold tracking-tight text-zinc-900 dark:text-white">
-              Welcome back, {session.user?.name || "Reader"}
-            </h1>
-            <p className="mt-2 text-zinc-600 dark:text-zinc-400">
-              Pick up right where you left off and keep the streak alive.
-            </p>
-          </div>
-          <div className="flex items-center gap-4">
-            <div className="flex items-center gap-2 rounded-full bg-amber-100 px-4 py-2 text-sm font-semibold text-amber-900 dark:bg-amber-900/30 dark:text-amber-500">
-              <Trophy className="h-4 w-4" />
-              1,240 Points
+              <div className="grid gap-4 sm:grid-cols-2">
+                <Surface className="p-6">
+                  <Flame className="h-5 w-5 text-[color:var(--accent)]" />
+                  <p className="mt-5 text-3xl font-semibold text-[color:var(--foreground)]">
+                    {data.user.streakDays} days
+                  </p>
+                  <p className="mt-2 text-sm text-[color:var(--muted-foreground)]">Current streak</p>
+                </Surface>
+                <Surface className="p-6">
+                  <Trophy className="h-5 w-5 text-[color:var(--accent)]" />
+                  <p className="mt-5 text-3xl font-semibold text-[color:var(--foreground)]">
+                    {data.user.points}
+                  </p>
+                  <p className="mt-2 text-sm text-[color:var(--muted-foreground)]">Reward points</p>
+                </Surface>
+                <Surface className="p-6">
+                  <Library className="h-5 w-5 text-[color:var(--accent)]" />
+                  <p className="mt-5 text-3xl font-semibold text-[color:var(--foreground)]">
+                    {data.stats.completedTitles}
+                  </p>
+                  <p className="mt-2 text-sm text-[color:var(--muted-foreground)]">Completed titles</p>
+                </Surface>
+                <Surface className="p-6">
+                  <Headphones className="h-5 w-5 text-[color:var(--accent)]" />
+                  <p className="mt-5 text-3xl font-semibold text-[color:var(--foreground)]">
+                    {data.stats.readingHours}h
+                  </p>
+                  <p className="mt-2 text-sm text-[color:var(--muted-foreground)]">Listening time</p>
+                </Surface>
+              </div>
             </div>
-            <div className="flex items-center gap-2 rounded-full bg-orange-100 px-4 py-2 text-sm font-semibold text-orange-900 dark:bg-orange-900/30 dark:text-orange-500">
-              <Target className="h-4 w-4" />
-              12 Day Streak
-            </div>
-          </div>
-        </div>
+          </Surface>
 
-        <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
-          <div className="lg:col-span-2 space-y-8">
-            <section>
-              <h2 className="text-xl font-bold text-zinc-900 dark:text-white mb-4 flex items-center gap-2">
-                <Clock className="h-5 w-5 text-indigo-500" /> Continue Reading
-              </h2>
-              <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
-                {/* Book Card Mock */}
-                <div className="group relative flex gap-6 rounded-2xl border border-zinc-200 bg-white p-4 shadow-sm transition-shadow hover:shadow-md dark:border-zinc-800 dark:bg-zinc-900">
-                  <div className="h-32 w-24 shrink-0 overflow-hidden rounded-lg bg-zinc-100 dark:bg-zinc-800">
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src="https://images.unsplash.com/photo-1544947950-fa07a98d237f?auto=format&fit=crop&q=80&w=200" alt="Book cover" className="h-full w-full object-cover" />
-                  </div>
-                  <div className="flex flex-1 flex-col">
-                    <h3 className="font-semibold text-zinc-900 dark:text-white line-clamp-1">The Art of Innovation</h3>
-                    <p className="text-sm text-zinc-500 dark:text-zinc-400 mt-1">By Sarah Connor</p>
-                    <div className="mt-auto">
-                      <div className="mb-1 flex justify-between text-xs font-medium text-zinc-600 dark:text-zinc-400">
-                        <span>45% Completed</span>
-                        <span>120/265 pages</span>
-                      </div>
-                      <div className="h-2 w-full overflow-hidden rounded-full bg-zinc-100 dark:bg-zinc-800">
-                        <div className="h-full rounded-full bg-indigo-500" style={{ width: '45%' }} />
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                 {/* Audio Card Mock */}
-                 <div className="group relative flex gap-6 rounded-2xl border border-zinc-200 bg-white p-4 shadow-sm transition-shadow hover:shadow-md dark:border-zinc-800 dark:bg-zinc-900">
-                  <div className="h-32 w-24 shrink-0 overflow-hidden rounded-lg bg-zinc-100 dark:bg-zinc-800 relative">
-                     {/* The alt attribute is already present, addressing the primary image warning.
-                         The eslint-disable comment is kept as per the original intent to use a plain img tag. */}
-                     {/* eslint-disable-next-line @next/next/no-img-element */}
-                     <img src="https://images.unsplash.com/photo-1589829085413-56de8ae18c73?auto=format&fit=crop&q=80&w=200" alt="Audio cover" className="h-full w-full object-cover opacity-80" />
-                     <div className="absolute inset-0 flex items-center justify-center bg-black/20">
-                        <PlayCircle className="h-10 w-10 text-white opacity-80 group-hover:opacity-100 transition-opacity" />
-                     </div>
-                  </div>
-                  <div className="flex flex-1 flex-col">
-                    <h3 className="font-semibold text-zinc-900 dark:text-white line-clamp-1">Deep Work Strategies</h3>
-                    <p className="text-sm text-zinc-500 dark:text-zinc-400 mt-1">Audiobook</p>
-                    <div className="mt-auto">
-                      <div className="mb-1 flex justify-between text-xs font-medium text-zinc-600 dark:text-zinc-400">
-                         <span>1h 15m left</span>
-                      </div>
-                      <div className="h-2 w-full overflow-hidden rounded-full bg-zinc-100 dark:bg-zinc-800">
-                        <div className="h-full rounded-full bg-emerald-500" style={{ width: '70%' }} />
-                      </div>
-                    </div>
-                  </div>
+          <div className="grid gap-6 xl:grid-cols-[1.1fr_0.9fr]">
+            <Surface className="space-y-6 p-6">
+              <div className="flex items-center justify-between gap-4">
+                <div>
+                  <p className="text-xs uppercase tracking-[0.28em] text-[color:var(--muted-foreground)]">
+                    Continue
+                  </p>
+                  <h2 className="mt-3 text-3xl font-semibold text-[color:var(--foreground)]">
+                    Reading and listening
+                  </h2>
                 </div>
               </div>
-            </section>
+
+              <div className="grid gap-4">
+                {data.continueReading.map((item) => (
+                  <ContinueCard key={item.book?.id ?? item.id} item={item} />
+                ))}
+                {data.continueListening.map((item) => (
+                  <ContinueCard key={item.book?.id ?? item.id} item={item} />
+                ))}
+              </div>
+            </Surface>
+
+            <Surface className="space-y-6 p-6">
+              <div>
+                <p className="text-xs uppercase tracking-[0.28em] text-[color:var(--muted-foreground)]">
+                  Weekly quiz
+                </p>
+                <h2 className="mt-3 text-3xl font-semibold text-[color:var(--foreground)]">
+                  {data.weeklyQuiz?.title ?? "No quiz this week"}
+                </h2>
+              </div>
+              <p className="text-sm leading-7 text-[color:var(--muted-foreground)]">
+                {data.weeklyQuiz?.description ??
+                  "When a weekly quiz is published it appears here with score history."}
+              </p>
+              <Link
+                href="/quiz"
+                className="inline-flex items-center gap-2 rounded-full bg-[color:var(--foreground)] px-5 py-3 text-sm font-semibold text-[color:var(--bg)]"
+              >
+                Open quiz
+                <ArrowRight className="h-4 w-4" />
+              </Link>
+              {data.weeklyQuiz?.submission ? (
+                <div className="rounded-[22px] bg-[color:var(--bg)] p-4 text-sm text-[color:var(--muted-foreground)]">
+                  Submitted on {formatRelativeDate(data.weeklyQuiz.submission.createdAt)} with{" "}
+                  {data.weeklyQuiz.submission.score} pts.
+                </div>
+              ) : null}
+            </Surface>
           </div>
 
-          <div className="space-y-8">
-             <section className="rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
-                <h2 className="text-lg font-bold text-zinc-900 dark:text-white mb-6 flex items-center gap-2">
-                   <BarChart3 className="h-5 w-5 text-indigo-500" /> Weekly Activity
+          <div className="grid gap-6 xl:grid-cols-[0.9fr_1.1fr]">
+            <Surface className="space-y-5 p-6">
+              <div>
+                <p className="text-xs uppercase tracking-[0.28em] text-[color:var(--muted-foreground)]">
+                  Rewards log
+                </p>
+                <h2 className="mt-3 text-3xl font-semibold text-[color:var(--foreground)]">
+                  Recent point events
                 </h2>
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                     <span className="text-sm text-zinc-600 dark:text-zinc-400">Books Read</span>
-                     <span className="font-bold text-zinc-900 dark:text-white">2</span>
+              </div>
+              {data.rewards.map((reward) => (
+                <div
+                  key={reward.id}
+                  className="rounded-[22px] border border-[color:var(--border)] bg-[color:var(--bg)] p-4"
+                >
+                  <div className="flex items-center justify-between gap-3">
+                    <p className="font-semibold text-[color:var(--foreground)]">{reward.title}</p>
+                    <span className="text-sm font-semibold text-[color:var(--accent)]">
+                      +{reward.pointsChange}
+                    </span>
                   </div>
-                  <div className="flex items-center justify-between">
-                     <span className="text-sm text-zinc-600 dark:text-zinc-400">Hours Listened</span>
-                     <span className="font-bold text-zinc-900 dark:text-white">5.4h</span>
-                  </div>
-                   <div className="flex items-center justify-between">
-                     <span className="text-sm text-zinc-600 dark:text-zinc-400">Quiz Score Avg</span>
-                     <span className="font-bold text-zinc-900 dark:text-white">92%</span>
-                  </div>
+                  <p className="mt-2 text-sm text-[color:var(--muted-foreground)]">
+                    {reward.description}
+                  </p>
                 </div>
-                <button className="mt-8 w-full rounded-xl bg-zinc-100 py-3 text-sm font-medium text-zinc-900 hover:bg-zinc-200 dark:bg-zinc-800 dark:text-white dark:hover:bg-zinc-700 transition-colors">
-                   View Full Stats
-                </button>
-             </section>
+              ))}
+            </Surface>
+
+            <Surface className="space-y-5 p-6">
+              <div>
+                <p className="text-xs uppercase tracking-[0.28em] text-[color:var(--muted-foreground)]">
+                  Recommendations
+                </p>
+                <h2 className="mt-3 text-3xl font-semibold text-[color:var(--foreground)]">
+                  AI-style picks from your history
+                </h2>
+              </div>
+              <div className="grid gap-4 md:grid-cols-2">
+                {data.recommendations.map((book) => (
+                  <div key={book.id} className="space-y-3">
+                    <BookCard book={book} compact />
+                    <p className="text-sm leading-7 text-[color:var(--muted-foreground)]">
+                      {book.reason}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            </Surface>
+          </div>
+
+          <div className="grid gap-6 xl:grid-cols-[1fr_1fr_1fr]">
+            <Surface className="space-y-5 p-6">
+              <h2 className="text-2xl font-semibold text-[color:var(--foreground)]">Leaderboard</h2>
+              {data.leaderboard.map((user, index) => (
+                <div
+                  key={user.id}
+                  className="flex items-center justify-between rounded-[20px] bg-[color:var(--bg)] px-4 py-3"
+                >
+                  <div>
+                    <p className="font-semibold text-[color:var(--foreground)]">
+                      #{index + 1} {user.name}
+                    </p>
+                    <p className="text-sm text-[color:var(--muted-foreground)]">
+                      {user.streakDays} day streak
+                    </p>
+                  </div>
+                  <span className="font-semibold text-[color:var(--accent)]">{user.points} pts</span>
+                </div>
+              ))}
+            </Surface>
+
+            <Surface className="space-y-5 p-6">
+              <h2 className="text-2xl font-semibold text-[color:var(--foreground)]">Quotes</h2>
+              {data.quotes.map((quote) => (
+                <blockquote key={quote.id} className="rounded-[20px] bg-[color:var(--bg)] p-4">
+                  <p className="font-serif text-2xl text-[color:var(--foreground)]">“{quote.text}”</p>
+                  <footer className="mt-3 text-sm text-[color:var(--muted-foreground)]">
+                    {quote.author}
+                  </footer>
+                </blockquote>
+              ))}
+            </Surface>
+
+            <Surface className="space-y-5 p-6">
+              <h2 className="text-2xl font-semibold text-[color:var(--foreground)]">Recent orders</h2>
+              {data.orders.map((order) => (
+                <div key={order.id} className="rounded-[20px] bg-[color:var(--bg)] p-4">
+                  <p className="font-semibold text-[color:var(--foreground)]">
+                    {order.paymentReference ?? order.id}
+                  </p>
+                  <p className="mt-2 text-sm text-[color:var(--muted-foreground)]">
+                    {order.items.length} item(s) • {order.total}
+                  </p>
+                </div>
+              ))}
+            </Surface>
           </div>
         </div>
-      </main>
-    </div>
+      )}
+    </AuthGuard>
   );
 }

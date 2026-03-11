@@ -6,211 +6,263 @@ datasource db {
   provider = "postgresql"
 }
 
-model User {
-  id            String    @id @default(uuid())
-  email         String    @unique
-  password      String?
-  name          String
-  role          Role      @default(USER)
-  points        Int       @default(0)
-  streakDays    Int       @default(0)
-  lastReadDate  DateTime?
-  avatar        String?
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
-
-  progress      Progress[]
-  transactions  Transaction[] // or Purchase
-  reviews       Review[]
-  notes         Note[]
-  comments      Comment[]
-  quizResults   QuizResult[]
-  cart          Cart?
-  wishlist      Wishlist?
-  rewards       Reward[]
-}
-
-enum Role {
+enum UserRole {
   USER
   ADMIN
 }
 
-enum BookType {
+enum BookFormat {
   AUDIO
   PDF
   STORE
 }
 
+enum AnnotationType {
+  HIGHLIGHT
+  UNDERLINE
+  NOTE
+}
+
+enum OrderStatus {
+  PENDING
+  PAID
+  FULFILLED
+  CANCELLED
+}
+
+enum RewardType {
+  STREAK
+  QUIZ
+  READING
+  LISTENING
+  PURCHASE
+  ADMIN
+}
+
+model User {
+  id            String        @id @default(cuid())
+  email         String        @unique
+  passwordHash  String
+  name          String
+  role          UserRole      @default(USER)
+  avatarUrl     String?
+  headline      String?
+  points        Int           @default(0)
+  streakDays    Int           @default(0)
+  longestStreak Int           @default(0)
+  lastActiveAt  DateTime?
+  preferences   Json?
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+  progresses    Progress[]
+  annotations   Annotation[]
+  discussions   Discussion[]
+  quizAttempts  QuizAttempt[]
+  rewardEvents  RewardEvent[]
+  cart          Cart?
+  orders        Order[]
+}
+
 model Category {
-  id          String   @id @default(uuid())
+  id          String   @id @default(cuid())
   name        String   @unique
-  description String?
+  slug        String   @unique
+  description String
+  accentColor String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
   books       Book[]
 }
 
 model Book {
-  id          String    @id @default(uuid())
-  title       String
-  author      String
-  description String
-  coverImage  String
-  type        BookType
-  price       Float     @default(0.0)
-  discount    Float     @default(0.0) // new
-  pdfUrl      String?
-  audioUrl    String?
-  pagesCount  Int?      // pdf specific
-  duration    Int?      // audio specific, in seconds
-  categoryId  String?
-  category    Category? @relation(fields: [categoryId], references: [id])
-  createdAt   DateTime  @default(now())
-
-  progress    Progress[]
-  reviews     Review[]
-  notes       Note[]
-  comments    Comment[]
-  cartItems   CartItem[]
-  wishlistItems WishlistItem[]
+  id              String       @id @default(cuid())
+  slug            String       @unique
+  title           String
+  subtitle        String?
+  author          String
+  description     String
+  shortDescription String
+  coverImage      String
+  backdropImage   String?
+  format          BookFormat
+  language        String       @default("English")
+  level           String       @default("All Levels")
+  price           Float        @default(0)
+  salePrice       Float?
+  rating          Float        @default(0)
+  reviewCount     Int          @default(0)
+  pagesCount      Int?
+  audioDuration   Int?
+  stock           Int?
+  sampleAudioUrl  String?
+  audioUrl        String?
+  pdfUrl          String?
+  quote           String?
+  pointsReward    Int          @default(20)
+  isFeatured      Boolean      @default(false)
+  isPublished     Boolean      @default(true)
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+  categoryId      String?
+  category        Category?    @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  progresses      Progress[]
+  annotations     Annotation[]
+  discussions     Discussion[]
+  cartItems       CartItem[]
+  orderItems      OrderItem[]
 }
 
 model Progress {
-  id          String   @id @default(uuid())
-  userId      String
-  bookId      String
-  percentage  Float    @default(0)
-  lastPos     Float    @default(0)
-  isCompleted Boolean  @default(false)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-
-  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  book        Book     @relation(fields: [bookId], references: [id], onDelete: Cascade)
+  id           String    @id @default(cuid())
+  percentage   Float     @default(0)
+  currentPage  Int?
+  currentTime  Int?
+  isCompleted  Boolean   @default(false)
+  completedAt  DateTime?
+  lastOpenedAt DateTime  @default(now())
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  userId       String
+  bookId       String
+  user         User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  book         Book      @relation(fields: [bookId], references: [id], onDelete: Cascade)
 
   @@unique([userId, bookId])
 }
 
-model Note {
-  id          String   @id @default(uuid())
-  userId      String
-  bookId      String
-  content     String
-  color       String?  // for highlights
-  position    String?  // page or timestamps
-  isHighlight Boolean  @default(false)
-  createdAt   DateTime @default(now())
-
-  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  book        Book     @relation(fields: [bookId], references: [id], onDelete: Cascade)
+model Annotation {
+  id         String         @id @default(cuid())
+  type       AnnotationType
+  quote      String?
+  content    String?
+  color      String?        @default("#FDE68A")
+  page       Int?
+  timestamp  Int?
+  createdAt  DateTime       @default(now())
+  updatedAt  DateTime       @updatedAt
+  userId     String
+  bookId     String
+  user       User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  book       Book           @relation(fields: [bookId], references: [id], onDelete: Cascade)
 }
 
-model Comment {
-  id          String   @id @default(uuid())
-  userId      String
-  bookId      String
-  content     String
-  createdAt   DateTime @default(now())
-
-  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  book        Book     @relation(fields: [bookId], references: [id], onDelete: Cascade)
-}
-
-model Transaction {
-  id          String   @id @default(uuid())
-  userId      String
-  amount      Float
-  status      String   // PENDING, COMPLETED, CANCELLED
-  items       Json     // Array of product ids
-  createdAt   DateTime @default(now())
-
-  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-}
-
-model Review {
-  id          String   @id @default(uuid())
-  userId      String
-  bookId      String
-  rating      Int
-  comment     String?
-  createdAt   DateTime @default(now())
-
-  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  book        Book     @relation(fields: [bookId], references: [id], onDelete: Cascade)
-}
-
-model Cart {
-  id          String   @id @default(uuid())
-  userId      String   @unique
-  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  items       CartItem[]
-}
-
-model CartItem {
-  id          String   @id @default(uuid())
-  cartId      String
-  bookId      String
-  quantity    Int      @default(1)
-  cart        Cart     @relation(fields: [cartId], references: [id], onDelete: Cascade)
-  book        Book     @relation(fields: [bookId], references: [id], onDelete: Cascade)
-}
-
-model Wishlist {
-  id          String   @id @default(uuid())
-  userId      String   @unique
-  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  items       WishlistItem[]
-}
-
-model WishlistItem {
-  id          String   @id @default(uuid())
-  wishlistId  String
-  bookId      String
-  wishlist    Wishlist @relation(fields: [wishlistId], references: [id], onDelete: Cascade)
-  book        Book     @relation(fields: [bookId], references: [id], onDelete: Cascade)
+model Discussion {
+  id        String   @id @default(cuid())
+  content   String
+  likes     Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  userId    String
+  bookId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  book      Book     @relation(fields: [bookId], references: [id], onDelete: Cascade)
 }
 
 model Quote {
-  id          String   @id @default(uuid())
-  text        String
-  author      String
-  bookTitle   String?
-  createdAt   DateTime @default(now())
+  id        String   @id @default(cuid())
+  text      String
+  author    String
+  bookTitle String
+  createdAt DateTime @default(now())
 }
 
 model Quiz {
-  id          String   @id @default(uuid())
+  id          String         @id @default(cuid())
   title       String
-  description String?
-  isActive    Boolean  @default(true)
-  createdAt   DateTime @default(now())
+  description String
+  startsAt    DateTime
+  endsAt      DateTime
+  isPublished Boolean        @default(true)
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
   questions   QuizQuestion[]
-  results     QuizResult[]
+  attempts    QuizAttempt[]
 }
 
 model QuizQuestion {
-  id          String   @id @default(uuid())
+  id          String   @id @default(cuid())
+  prompt      String
+  options     Json
+  answer      String
+  explanation String?
+  points      Int      @default(10)
+  createdAt   DateTime @default(now())
   quizId      String
-  question    String
-  options     Json     // Array of string options
-  answer      String   // the correct string option
   quiz        Quiz     @relation(fields: [quizId], references: [id], onDelete: Cascade)
 }
 
-model QuizResult {
-  id          String   @id @default(uuid())
-  quizId      String
-  userId      String
-  score       Int
-  createdAt   DateTime @default(now())
-  quiz        Quiz     @relation(fields: [quizId], references: [id], onDelete: Cascade)
-  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+model QuizAttempt {
+  id        String   @id @default(cuid())
+  answers   Json
+  score     Int
+  createdAt DateTime @default(now())
+  quizId    String
+  userId    String
+  quiz      Quiz     @relation(fields: [quizId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([quizId, userId])
 }
 
-model Reward {
-  id          String   @id @default(uuid())
-  name        String
-  description String
-  pointsCost  Int
-  userId      String
-  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  createdAt   DateTime @default(now())
+model RewardEvent {
+  id           String     @id @default(cuid())
+  type         RewardType
+  title        String
+  description  String
+  pointsChange Int
+  createdAt    DateTime   @default(now())
+  userId       String
+  user         User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Cart {
+  id        String     @id @default(cuid())
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+  userId    String     @unique
+  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  items     CartItem[]
+}
+
+model CartItem {
+  id        String   @id @default(cuid())
+  quantity  Int      @default(1)
+  unitPrice Float
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  cartId    String
+  bookId    String
+  cart      Cart     @relation(fields: [cartId], references: [id], onDelete: Cascade)
+  book      Book     @relation(fields: [bookId], references: [id], onDelete: Cascade)
+
+  @@unique([cartId, bookId])
+}
+
+model Order {
+  id               String      @id @default(cuid())
+  status           OrderStatus @default(PAID)
+  subtotal         Float
+  discount         Float       @default(0)
+  total            Float
+  pointsUsed       Int         @default(0)
+  paymentReference String?
+  createdAt        DateTime    @default(now())
+  updatedAt        DateTime    @updatedAt
+  userId           String
+  user             User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  items            OrderItem[]
+}
+
+model OrderItem {
+  id             String   @id @default(cuid())
+  titleSnapshot  String
+  authorSnapshot String
+  coverSnapshot  String
+  price          Float
+  quantity       Int      @default(1)
+  createdAt      DateTime @default(now())
+  orderId        String
+  bookId         String
+  order          Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  book           Book     @relation(fields: [bookId], references: [id], onDelete: Restrict)
 }

@@ -1,65 +1,85 @@
 import NextAuth from "next-auth";
 import Credentials from "next-auth/providers/credentials";
-import axios from "axios";
+
+const apiUrl = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:5000/api";
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
+  session: {
+    strategy: "jwt",
+  },
+  trustHost: true,
   providers: [
     Credentials({
-      name: "Credentials",
+      name: "Bookora Credentials",
       credentials: {
         email: { label: "Email", type: "email" },
-        password: { label: "Password", type: "password" }
+        password: { label: "Password", type: "password" },
       },
-      async authorize(credentials) {
-        if (!credentials?.email || !credentials?.password) return null;
+      authorize: async (credentials) => {
+        const email = String(credentials?.email ?? "").trim();
+        const password = String(credentials?.password ?? "");
 
-        try {
-          const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:5000";
-          const res = await axios.post(`${backendUrl}/api/auth/login`, {
-            email: credentials.email,
-            password: credentials.password,
-          });
-
-          if (res.data.user) {
-            return {
-              id: res.data.user.id,
-              name: res.data.user.name,
-              email: res.data.user.email,
-              role: res.data.user.role,
-              token: res.data.token,
-            };
-          }
-          return null;
-        } catch {
+        if (!email || !password) {
           return null;
         }
-      }
-    })
+
+        const response = await fetch(`${apiUrl}/auth/login`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ email, password }),
+        });
+
+        if (!response.ok) {
+          return null;
+        }
+
+        const payload = await response.json();
+
+        if (!payload?.token || !payload?.user) {
+          return null;
+        }
+
+        return {
+          id: payload.user.id,
+          name: payload.user.name,
+          email: payload.user.email,
+          role: payload.user.role,
+          image: payload.user.avatarUrl,
+          points: payload.user.points,
+          streakDays: payload.user.streakDays,
+          accessToken: payload.token,
+        };
+      },
+    }),
   ],
   callbacks: {
-    async jwt({ token, user }) {
+    jwt: async ({ token, user }) => {
       if (user) {
-        token.id = user.id;
-        token.role = (user as { role?: string }).role;
-        token.accessToken = (user as { token?: string }).token;
+        token.role = user.role;
+        token.picture = user.image;
+        token.points = user.points;
+        token.streakDays = user.streakDays;
+        token.accessToken = user.accessToken;
       }
+
       return token;
     },
-    async session({ session, token }) {
-      if (token && session.user) {
-        session.user.id = token.id as string;
-        (session.user as { role?: string }).role = token.role as string;
-        (session as { accessToken?: string }).accessToken = token.accessToken as string;
+    session: async ({ session, token }) => {
+      if (session.user) {
+        session.user.id = token.sub ?? "";
+        session.user.role = (token.role as "USER" | "ADMIN") ?? "USER";
+        session.user.image = (token.picture as string | null | undefined) ?? null;
+        session.user.points = Number(token.points ?? 0);
+        session.user.streakDays = Number(token.streakDays ?? 0);
       }
+
+      session.accessToken = (token.accessToken as string | undefined) ?? "";
       return session;
-    }
+    },
   },
   pages: {
     signIn: "/login",
   },
-  session: {
-    strategy: "jwt",
-  },
-  secret: process.env.NEXTAUTH_SECRET,
 });
-

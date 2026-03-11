@@ -1,33 +1,77 @@
-import { Request, Response, NextFunction } from 'express';
-import jwt from 'jsonwebtoken';
-import { Role } from '@prisma/client';
+import { NextFunction, Request, Response } from "express";
+import { UserRole } from "@prisma/client";
+import { verifyAccessToken } from "../lib/jwt";
 
 export interface AuthRequest extends Request {
-  userId?: string;
-  userRole?: Role;
+  user?: {
+    id: string;
+    email: string;
+    name: string;
+    role: UserRole;
+  };
 }
 
-export const authenticate = (req: AuthRequest, res: Response, next: NextFunction) => {
-  try {
-    const authHeader = req.headers.authorization;
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return res.status(401).json({ message: 'No token provided' });
-    }
+const readBearerToken = (req: Request) => {
+  const header = req.headers.authorization;
 
-    const token = authHeader.split(' ')[1];
-    const decoded = jwt.verify(token, process.env.JWT_SECRET as string) as { id: string, role?: Role };
-    
-    req.userId = decoded.id;
-    req.userRole = decoded.role;
+  if (!header || !header.startsWith("Bearer ")) {
+    return null;
+  }
+
+  return header.slice(7);
+};
+
+export const optionalAuthenticate = (
+  req: AuthRequest,
+  _res: Response,
+  next: NextFunction,
+) => {
+  const token = readBearerToken(req);
+
+  if (!token) {
     next();
-  } catch (error) {
-    return res.status(401).json({ message: 'Invalid token' });
+    return;
+  }
+
+  try {
+    const payload = verifyAccessToken(token);
+    req.user = payload;
+  } catch {
+    req.user = undefined;
+  }
+
+  next();
+};
+
+export const authenticate = (
+  req: AuthRequest,
+  res: Response,
+  next: NextFunction,
+) => {
+  const token = readBearerToken(req);
+
+  if (!token) {
+    res.status(401).json({ message: "Authentication required." });
+    return;
+  }
+
+  try {
+    req.user = verifyAccessToken(token);
+    next();
+  } catch {
+    res.status(401).json({ message: "Invalid or expired access token." });
   }
 };
 
-export const requireAdmin = (req: AuthRequest, res: Response, next: NextFunction) => {
-  if (req.userRole !== Role.ADMIN) {
-    return res.status(403).json({ message: 'Forbidden: Admins only' });
+export const requireAdmin = (
+  req: AuthRequest,
+  res: Response,
+  next: NextFunction,
+) => {
+  if (req.user?.role !== UserRole.ADMIN) {
+    res.status(403).json({ message: "Admin access required." });
+    return;
   }
+
   next();
 };

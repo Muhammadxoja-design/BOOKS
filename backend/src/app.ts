@@ -1,37 +1,46 @@
-import express from 'express';
-import cors from 'cors';
-import dotenv from 'dotenv';
-import authRoutes from './routes/auth.routes';
-import userRoutes from './routes/user.routes';
-import bookRoutes from './routes/book.routes';
-import progressRoutes from './routes/progress.routes';
-import reviewRoutes from './routes/review.routes';
-import transactionRoutes from './routes/transaction.routes';
-import adminRoutes from './routes/admin.routes';
-import quizRoutes from './routes/quiz.routes';
-import storeRoutes from './routes/store.routes';
+import express from "express";
+import cors from "cors";
+import dotenv from "dotenv";
+import adminRoutes from "./routes/admin.routes";
+import authRoutes from "./routes/auth.routes";
+import bookRoutes from "./routes/book.routes";
+import catalogRoutes from "./routes/catalog.routes";
+import progressRoutes from "./routes/progress.routes";
+import quizRoutes from "./routes/quiz.routes";
+import storeRoutes from "./routes/store.routes";
+import userRoutes from "./routes/user.routes";
 
 dotenv.config();
 
 const app = express();
 
-app.use(cors());
-app.use(express.json());
+app.use(
+  cors({
+    origin: true,
+    credentials: true,
+  }),
+);
+app.use(express.json({ limit: "1mb" }));
 
-// Routes
-app.use('/api/auth', authRoutes);
-app.use('/api/users', userRoutes);
-app.use('/api/books', bookRoutes);
-app.use('/api/progress', progressRoutes);
-app.use('/api/transactions', transactionRoutes);
-app.use('/api/admin', adminRoutes);
-app.use('/api/quiz', quizRoutes);
-app.use('/api/store', storeRoutes);
+app.get("/api/health", (_req, res) => {
+  res.status(200).json({
+    status: "ok",
+    service: "bookora-api",
+    timestamp: new Date().toISOString(),
+  });
+});
 
-// Mount reviews explicitly under books or directly
-app.use('/api/books/:bookId/reviews', reviewRoutes);
+app.use("/api/auth", authRoutes);
+app.use("/api/catalog", catalogRoutes);
+app.use("/api/books", bookRoutes);
+app.use("/api/progress", progressRoutes);
+app.use("/api/quizzes", quizRoutes);
+app.use("/api/store", storeRoutes);
+app.use("/api/users", userRoutes);
+app.use("/api/admin", adminRoutes);
 
-// Optional: static files for uploads
-// app.use('/uploads', express.static('uploads'));
+app.use((_req, res) => {
+  res.status(404).json({ message: "Route not found." });
+});
 
 export default app;

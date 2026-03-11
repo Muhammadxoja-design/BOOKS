@@ -1,11 +1,11 @@
-import { Router } from 'express';
-import { updateProgress, getProgress } from '../controllers/progress.controller';
-import { authenticate } from '../middlewares/auth.middleware';
+import { Router } from "express";
+import { getMyProgress, upsertProgress } from "../controllers/progress.controller";
+import { authenticate } from "../middlewares/auth.middleware";
 
 const router = Router();
 
 router.use(authenticate);
-router.post('/', updateProgress);
-router.get('/', getProgress);
+router.get("/me", getMyProgress);
+router.put("/", upsertProgress);
 
 export default router;

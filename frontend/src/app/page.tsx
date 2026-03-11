@@ -1,94 +1,275 @@
+"use client";
+
 import Link from "next/link";
-import { ArrowRight, BookOpen, Headphones, Trophy, Star } from "lucide-react";
-import Navbar from "@/components/layout/Navbar";
+import { useEffect, useState } from "react";
+import { ArrowRight, Headphones, Library, ShoppingBag, Sparkles, Trophy } from "lucide-react";
+import { BookCard } from "@/components/books/book-card";
+import { Pill } from "@/components/ui/pill";
+import { Surface } from "@/components/ui/surface";
+import { apiFetch } from "@/lib/api";
+import { HomeFeed } from "@/lib/types";
+import { formatCurrency } from "@/lib/utils";
 
-export default function Home() {
+const features = [
+  {
+    title: "Audio books with progress sync",
+    description: "Custom player with 1x, 1.5x, 2x speed and listening telemetry.",
+    icon: Headphones,
+  },
+  {
+    title: "PDF reading workspace",
+    description: "Reader view, highlights, underlines, note capture, and progress tracking.",
+    icon: Library,
+  },
+  {
+    title: "Gamified store ecosystem",
+    description: "Points, streaks, weekly quiz, recommendations, comments, cart, and checkout.",
+    icon: Trophy,
+  },
+];
+
+export default function HomePage() {
+  const [feed, setFeed] = useState<HomeFeed | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    const loadFeed = async () => {
+      try {
+        setLoading(true);
+        const data = await apiFetch<HomeFeed>("/catalog/home");
+        setFeed(data);
+      } catch (loadError) {
+        setError(loadError instanceof Error ? loadError.message : "Unable to load home feed.");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    void loadFeed();
+  }, []);
+
   return (
-    <div className="flex min-h-screen flex-col bg-zinc-50 dark:bg-black font-sans selection:bg-indigo-500/30">
-      <Navbar />
+    <div className="page-grid">
+      <Surface className="overflow-hidden">
+        <div className="grid gap-10 p-8 md:p-10 lg:grid-cols-[1.2fr_0.8fr]">
+          <div>
+            <Pill>
+              <Sparkles className="h-3.5 w-3.5" />
+              Premium startup-grade web app
+            </Pill>
+            <h1 className="mt-6 font-serif text-6xl leading-none text-[color:var(--foreground)] md:text-7xl">
+              Read, listen, collect, and compete in one polished book platform.
+            </h1>
+            <p className="mt-6 max-w-2xl text-lg leading-8 text-[color:var(--muted-foreground)]">
+              Bookora unifies audio books, PDF reading, book commerce, AI-style recommendations,
+              streaks, quizzes, leaderboards, and admin operations in a single responsive product.
+            </p>
+            <div className="mt-8 flex flex-wrap gap-3">
+              <Link
+                href="/register"
+                className="inline-flex items-center gap-2 rounded-full bg-[color:var(--foreground)] px-6 py-3 text-sm font-semibold text-[color:var(--bg)]"
+              >
+                Launch dashboard
+                <ArrowRight className="h-4 w-4" />
+              </Link>
+              <Link
+                href="/store"
+                className="rounded-full border border-[color:var(--border)] px-6 py-3 text-sm font-semibold text-[color:var(--foreground)]"
+              >
+                Explore store
+              </Link>
+            </div>
+          </div>
 
-      <main className="flex-1">
-        {/* Hero Section */}
-        <section className="relative overflow-hidden py-20 sm:py-32 lg:pb-32 xl:pb-36">
-          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-            <div className="lg:grid lg:grid-cols-12 lg:gap-8">
-              <div className="sm:text-center md:mx-auto md:max-w-2xl lg:col-span-6 lg:text-left">
-                <div className="flex justify-center lg:justify-start">
-                  <span className="inline-flex items-center rounded-full bg-indigo-50 px-3 py-1 text-sm font-semibold text-indigo-600 dark:bg-indigo-500/10 dark:text-indigo-400 ring-1 ring-inset ring-indigo-500/20">
-                    What&apos;s new in v1.0
-                  </span>
+          <div className="grid gap-4">
+            <Surface className="bg-[linear-gradient(135deg,rgba(225,124,57,0.2),rgba(15,143,166,0.18))] p-6">
+              <p className="text-xs uppercase tracking-[0.28em] text-[color:var(--muted-foreground)]">
+                Platform metrics
+              </p>
+              <div className="mt-6 grid gap-4 sm:grid-cols-3">
+                <div>
+                  <p className="text-3xl font-semibold text-[color:var(--foreground)]">
+                    {feed?.hero.metrics.readers ?? "5k+"}
+                  </p>
+                  <p className="mt-2 text-sm text-[color:var(--muted-foreground)]">Readers</p>
                 </div>
-                <h1 className="mt-8 text-4xl font-extrabold tracking-tight text-zinc-900 dark:text-white sm:text-6xl xl:text-7xl">
-                  Redefining your
-                  <span className="block text-indigo-600 dark:text-indigo-400"> reading journey.</span>
-                </h1>
-                <p className="mt-6 text-lg leading-relaxed text-zinc-600 dark:text-zinc-400 sm:text-xl">
-                  Dive into a world of limitless knowledge. Listen, read, highlight, and track your progress all in one beautifully designed platform. Earn points and climb the leaderboard.
+                <div>
+                  <p className="text-3xl font-semibold text-[color:var(--foreground)]">
+                    {feed?.hero.metrics.titles ?? "120+"}
+                  </p>
+                  <p className="mt-2 text-sm text-[color:var(--muted-foreground)]">Titles</p>
+                </div>
+                <div>
+                  <p className="text-3xl font-semibold text-[color:var(--foreground)]">
+                    {feed ? formatCurrency(feed.hero.metrics.revenue) : "$48k"}
+                  </p>
+                  <p className="mt-2 text-sm text-[color:var(--muted-foreground)]">Revenue</p>
+                </div>
+              </div>
+            </Surface>
+
+            <div className="grid gap-4 sm:grid-cols-2">
+              <Surface className="p-6">
+                <div className="flex items-center gap-3 text-[color:var(--accent)]">
+                  <Headphones className="h-5 w-5" />
+                  <Library className="h-5 w-5" />
+                </div>
+                <h2 className="mt-6 text-2xl font-semibold text-[color:var(--foreground)]">
+                  Reader + listener dashboard
+                </h2>
+                <p className="mt-3 text-sm leading-7 text-[color:var(--muted-foreground)]">
+                  Continue reading, continue listening, notes, rewards, quotes, quiz, leaderboard.
                 </p>
-                <div className="mt-10 flex flex-col gap-4 sm:flex-row sm:justify-center lg:justify-start">
-                  <Link href="/register" className="inline-flex items-center justify-center rounded-full bg-indigo-600 px-8 py-3.5 text-base font-semibold text-white shadow-sm hover:bg-indigo-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 transition-all duration-200">
-                    Start Reading Now
-                    <ArrowRight className="ml-2 h-5 w-5" />
-                  </Link>
-                  <Link href="/store" className="inline-flex items-center justify-center rounded-full ring-1 ring-zinc-200 bg-white px-8 py-3.5 text-base font-semibold text-zinc-900 hover:bg-zinc-50 dark:bg-zinc-900 dark:text-white dark:ring-zinc-800 dark:hover:bg-zinc-800 transition-all duration-200">
-                    Browse Store
-                  </Link>
+              </Surface>
+
+              <Surface className="p-6">
+                <div className="flex items-center gap-3 text-[color:var(--accent)]">
+                  <ShoppingBag className="h-5 w-5" />
+                  <Trophy className="h-5 w-5" />
                 </div>
-              </div>
-              <div className="relative mt-16 sm:mt-24 lg:col-span-6 lg:mt-0">
-                <div className="aspect-[4/3] w-full rounded-2xl bg-zinc-100 p-2 ring-1 ring-inset ring-zinc-900/10 dark:bg-zinc-900 dark:ring-white/10 overflow-hidden">
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src="https://images.unsplash.com/photo-1544947950-fa07a98d237f?auto=format&fit=crop&q=80&w=1000" alt="App dashboard preview" className="rounded-xl object-cover w-full h-full opacity-90 shadow-2xl ring-1 ring-gray-900/10" />
-                </div>
-              </div>
+                <h2 className="mt-6 text-2xl font-semibold text-[color:var(--foreground)]">
+                  Commerce + gamification
+                </h2>
+                <p className="mt-3 text-sm leading-7 text-[color:var(--muted-foreground)]">
+                  Cart, checkout, purchase rewards, weekly quiz payouts, and streak retention.
+                </p>
+              </Surface>
             </div>
           </div>
-        </section>
+        </div>
+      </Surface>
 
-        {/* Features Section */}
-        <section className="py-24 bg-white dark:bg-zinc-950">
-          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-            <div className="text-center">
-              <h2 className="text-3xl font-bold tracking-tight text-zinc-900 dark:text-white sm:text-4xl">Everything you need to grow</h2>
-              <p className="mt-4 text-lg text-zinc-600 dark:text-zinc-400">A comprehensive suite of tools designed to make reading a habit.</p>
+      <div className="grid gap-6 lg:grid-cols-3">
+        {features.map((feature) => {
+          const Icon = feature.icon;
+
+          return (
+            <Surface key={feature.title} className="p-6">
+              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[color:var(--muted)] text-[color:var(--accent)]">
+                <Icon className="h-5 w-5" />
+              </div>
+              <h2 className="mt-6 text-2xl font-semibold text-[color:var(--foreground)]">
+                {feature.title}
+              </h2>
+              <p className="mt-4 text-sm leading-7 text-[color:var(--muted-foreground)]">
+                {feature.description}
+              </p>
+            </Surface>
+          );
+        })}
+      </div>
+
+      {loading ? (
+        <Surface className="p-10 text-center">Loading catalog...</Surface>
+      ) : error || !feed ? (
+        <Surface className="p-10 text-center text-red-300">{error || "No feed found."}</Surface>
+      ) : (
+        <>
+          <section className="space-y-6">
+            <div className="flex flex-wrap items-end justify-between gap-4">
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-[0.32em] text-[color:var(--muted-foreground)]">
+                  Featured
+                </p>
+                <h2 className="mt-4 section-title text-[color:var(--foreground)]">
+                  Featured releases
+                </h2>
+              </div>
+              <Link href="/dashboard" className="text-sm font-semibold text-[color:var(--foreground)]">
+                Open full dashboard
+              </Link>
             </div>
-            
-            <div className="mt-20 grid grid-cols-1 gap-12 sm:grid-cols-2 lg:grid-cols-4">
-              <div className="flex flex-col items-center text-center">
-                <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-indigo-50 dark:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 shadow-sm border border-indigo-100 dark:border-indigo-500/20">
-                  <Headphones className="h-8 w-8" />
-                </div>
-                <h3 className="mt-6 text-xl font-bold text-zinc-900 dark:text-white">Audio Books</h3>
-                <p className="mt-2 text-zinc-600 dark:text-zinc-400">Listen on the go with our advanced player. Control playback speeds seamlessly.</p>
-              </div>
-
-              <div className="flex flex-col items-center text-center">
-                <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 shadow-sm border border-emerald-100 dark:border-emerald-500/20">
-                  <BookOpen className="h-8 w-8" />
-                </div>
-                <h3 className="mt-6 text-xl font-bold text-zinc-900 dark:text-white">PDF Reader</h3>
-                <p className="mt-2 text-zinc-600 dark:text-zinc-400">Highlight, take notes, and sync your reading progress automatically.</p>
-              </div>
-
-              <div className="flex flex-col items-center text-center">
-                <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-amber-50 dark:bg-amber-500/10 text-amber-600 dark:text-amber-400 shadow-sm border border-amber-100 dark:border-amber-500/20">
-                  <Trophy className="h-8 w-8" />
-                </div>
-                <h3 className="mt-6 text-xl font-bold text-zinc-900 dark:text-white">Gamification</h3>
-                <p className="mt-2 text-zinc-600 dark:text-zinc-400">Earn points, build streaks, take quizzes, and climb the weekly leaderboard.</p>
-              </div>
-
-              <div className="flex flex-col items-center text-center">
-                <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-pink-50 dark:bg-pink-500/10 text-pink-600 dark:text-pink-400 shadow-sm border border-pink-100 dark:border-pink-500/20">
-                  <Star className="h-8 w-8" />
-                </div>
-                <h3 className="mt-6 text-xl font-bold text-zinc-900 dark:text-white">AI Recommendations</h3>
-                <p className="mt-2 text-zinc-600 dark:text-zinc-400">Get personalized book suggestions based on your reading history and habits.</p>
-              </div>
+            <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
+              {feed.featured.map((book) => (
+                <BookCard key={book.id} book={book} />
+              ))}
             </div>
-          </div>
-        </section>
-      </main>
+          </section>
+
+          <section className="grid gap-6 lg:grid-cols-3">
+            {[
+              { title: "Audio Books", items: feed.sections.audioBooks },
+              { title: "PDF Books", items: feed.sections.pdfBooks },
+              { title: "Book Store", items: feed.sections.storeBooks },
+            ].map((section) => (
+              <Surface key={section.title} className="p-6">
+                <p className="text-xs uppercase tracking-[0.28em] text-[color:var(--muted-foreground)]">
+                  {section.title}
+                </p>
+                <div className="mt-5 space-y-4">
+                  {section.items.slice(0, 3).map((book) => (
+                    <Link
+                      key={book.id}
+                      href={book.format === "STORE" ? "/store" : `/${book.format === "AUDIO" ? "audio-books" : "pdf-books"}/${book.slug}`}
+                      className="flex items-center gap-4 rounded-[22px] bg-[color:var(--bg)] p-3 transition hover:-translate-y-0.5"
+                    >
+                      <img
+                        src={book.coverImage}
+                        alt={book.title}
+                        className="h-20 w-16 rounded-2xl object-cover"
+                      />
+                      <div>
+                        <p className="font-semibold text-[color:var(--foreground)]">{book.title}</p>
+                        <p className="mt-1 text-sm text-[color:var(--muted-foreground)]">{book.author}</p>
+                      </div>
+                    </Link>
+                  ))}
+                </div>
+              </Surface>
+            ))}
+          </section>
+
+          <section className="grid gap-6 lg:grid-cols-[1.1fr_0.9fr]">
+            <Surface className="p-8">
+              <p className="text-xs font-semibold uppercase tracking-[0.32em] text-[color:var(--muted-foreground)]">
+                Categories
+              </p>
+              <div className="mt-6 grid gap-4 sm:grid-cols-2">
+                {feed.categories.map((category) => (
+                  <div
+                    key={category.slug}
+                    className="rounded-[24px] border border-[color:var(--border)] bg-[color:var(--bg)] p-5"
+                  >
+                    <div
+                      className="mb-4 h-2 w-24 rounded-full"
+                      style={{ backgroundColor: category.accentColor }}
+                    />
+                    <h3 className="text-2xl font-semibold text-[color:var(--foreground)]">
+                      {category.name}
+                    </h3>
+                    <p className="mt-3 text-sm leading-7 text-[color:var(--muted-foreground)]">
+                      {category.description}
+                    </p>
+                    <p className="mt-4 text-sm font-semibold text-[color:var(--foreground)]">
+                      {category.bookCount ?? 0} books
+                    </p>
+                  </div>
+                ))}
+              </div>
+            </Surface>
+
+            <Surface className="p-8">
+              <p className="text-xs font-semibold uppercase tracking-[0.32em] text-[color:var(--muted-foreground)]">
+                Famous quotes
+              </p>
+              <div className="mt-6 space-y-4">
+                {feed.quotes.map((quote) => (
+                  <blockquote
+                    key={quote.id}
+                    className="rounded-[24px] bg-[color:var(--bg)] p-5 text-[color:var(--foreground)]"
+                  >
+                    <p className="font-serif text-2xl leading-tight">“{quote.text}”</p>
+                    <footer className="mt-4 text-sm text-[color:var(--muted-foreground)]">
+                      {quote.author} • {quote.bookTitle}
+                    </footer>
+                  </blockquote>
+                ))}
+              </div>
+            </Surface>
+          </section>
+        </>
+      )}
     </div>
   );
 }

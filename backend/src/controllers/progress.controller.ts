@@ -1,62 +1,140 @@
-import { Request, Response } from 'express';
-import { PrismaClient } from '@prisma/client';
+import { Response } from "express";
+import prisma from "../lib/prisma";
+import { getErrorMessage } from "../lib/http";
+import { AuthRequest } from "../middlewares/auth.middleware";
+import { awardProgressEvent } from "../services/gamification.service";
 
-const prisma = new PrismaClient();
-
-export const updateProgress = async (req: Request, res: Response) => {
+export const getMyProgress = async (req: AuthRequest, res: Response) => {
   try {
-    const userId = (req as any).userId;
-    const { bookId, percentage, lastPos } = req.body;
+    if (!req.user?.id) {
+      res.status(401).json({ message: "Authentication required." });
+      return;
+    }
 
-    if (!userId) return res.status(401).json({ message: 'Unauthorized' });
+    const progress = await prisma.progress.findMany({
+      where: { userId: req.user.id },
+      include: {
+        book: {
+          select: {
+            id: true,
+            slug: true,
+            title: true,
+            author: true,
+            coverImage: true,
+            format: true,
+            pagesCount: true,
+            audioDuration: true,
+            category: {
+              select: {
+                name: true,
+                accentColor: true,
+              },
+            },
+          },
+        },
+      },
+      orderBy: { updatedAt: "desc" },
+    });
 
+    res.status(200).json(progress);
+  } catch (error) {
+    res.status(500).json({ message: getErrorMessage(error) });
+  }
+};
+
+export const upsertProgress = async (req: AuthRequest, res: Response) => {
+  try {
+    if (!req.user?.id) {
+      res.status(401).json({ message: "Authentication required." });
+      return;
+    }
+
+    const { bookId, percentage, currentPage, currentTime } = req.body as {
+      bookId?: string;
+      percentage?: number;
+      currentPage?: number;
+      currentTime?: number;
+    };
+
+    if (!bookId || typeof percentage !== "number") {
+      res.status(400).json({ message: "bookId and percentage are required." });
+      return;
+    }
+
+    const [user, book, existingProgress] = await Promise.all([
+      prisma.user.findUnique({
+        where: { id: req.user.id },
+        select: {
+          points: true,
+          streakDays: true,
+          longestStreak: true,
+          lastActiveAt: true,
+        },
+      }),
+      prisma.book.findUnique({
+        where: { id: bookId },
+        select: {
+          id: true,
+          title: true,
+          format: true,
+          pointsReward: true,
+        },
+      }),
+      prisma.progress.findUnique({
+        where: {
+          userId_bookId: {
+            userId: req.user.id,
+            bookId,
+          },
+        },
+      }),
+    ]);
+
+    if (!user || !book) {
+      res.status(404).json({ message: "User or book not found." });
+      return;
+    }
+
+    const normalizedPercentage = Math.max(0, Math.min(100, percentage));
     const progress = await prisma.progress.upsert({
       where: {
         userId_bookId: {
-          userId,
+          userId: req.user.id,
           bookId,
         },
       },
       update: {
-        percentage,
-        lastPos,
+        percentage: normalizedPercentage,
+        currentPage,
+        currentTime,
+        isCompleted: normalizedPercentage >= 100,
+        completedAt: normalizedPercentage >= 100 ? new Date() : null,
+        lastOpenedAt: new Date(),
       },
       create: {
-        userId,
+        userId: req.user.id,
         bookId,
-        percentage,
-        lastPos,
+        percentage: normalizedPercentage,
+        currentPage,
+        currentTime,
+        isCompleted: normalizedPercentage >= 100,
+        completedAt: normalizedPercentage >= 100 ? new Date() : null,
       },
     });
 
-    // Award points if percentage is high and not already fully read (simplified logic)
-    if (percentage >= 100) {
-      await prisma.user.update({
-        where: { id: userId },
-        data: { points: { increment: 50 }, streakDays: { increment: 1 } },
-      });
-    } else {
-        await prisma.user.update({
-            where: { id: userId },
-            data: { points: { increment: 1 } },
-        });
-    }
+    const reward = await awardProgressEvent({
+      userId: req.user.id,
+      user,
+      book,
+      previousPercentage: existingProgress?.percentage ?? 0,
+      nextPercentage: normalizedPercentage,
+    });
 
-    res.status(200).json(progress);
+    res.status(200).json({
+      progress,
+      reward,
+    });
   } catch (error) {
-    res.status(500).json({ message: 'Error updating progress' });
+    res.status(500).json({ message: getErrorMessage(error) });
   }
 };
-
-export const getProgress = async (req: Request, res: Response) => {
-    try {
-        const userId = (req as any).userId;
-        const progress = await prisma.progress.findMany({
-            where: { userId },
-            include: { book: true }
-        });
-        res.status(200).json(progress);
-    } catch (error) {
-        res.status(500).json({ message: 'Error getting progress' });
-    }
-}

@@ -1,11 +1,24 @@
-import { Router } from 'express';
-import { getAllBooks, getBookById, createBook } from '../controllers/book.controller';
-import { authenticate } from '../middlewares/auth.middleware';
+import { Router } from "express";
+import {
+  addAnnotation,
+  addDiscussion,
+  getAnnotations,
+  getBookBySlug,
+  getBooks,
+  getDiscussions,
+} from "../controllers/book.controller";
+import {
+  authenticate,
+  optionalAuthenticate,
+} from "../middlewares/auth.middleware";
 
 const router = Router();
 
-router.get('/', getAllBooks);
-router.get('/:id', getBookById);
-router.post('/', authenticate, createBook); // Should probably be admin only
+router.get("/", optionalAuthenticate, getBooks);
+router.get("/:slug", optionalAuthenticate, getBookBySlug);
+router.get("/:slug/discussions", getDiscussions);
+router.post("/:slug/discussions", authenticate, addDiscussion);
+router.get("/:slug/annotations", authenticate, getAnnotations);
+router.post("/:slug/annotations", authenticate, addAnnotation);
 
 export default router;

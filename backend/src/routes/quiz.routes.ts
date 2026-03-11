@@ -1,12 +1,13 @@
-import { Router } from 'express';
-import { getWeeklyQuiz, submitQuiz } from '../controllers/quiz.controller';
-// import { authenticate } from '../middlewares/auth.middleware'; // Assuming it exists based on existing project
+import { Router } from "express";
+import { getWeeklyQuiz, submitWeeklyQuiz } from "../controllers/quiz.controller";
+import {
+  authenticate,
+  optionalAuthenticate,
+} from "../middlewares/auth.middleware";
 
 const router = Router();
 
-// To be secure, normally we use authenticate middleware.
-// Assuming the user is using standard express routing
-router.get('/', getWeeklyQuiz);
-router.post('/submit', submitQuiz);
+router.get("/weekly", optionalAuthenticate, getWeeklyQuiz);
+router.post("/weekly/submit", authenticate, submitWeeklyQuiz);
 
 export default router;
