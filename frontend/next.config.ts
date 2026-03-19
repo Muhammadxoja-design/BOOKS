@@ -10,7 +10,7 @@ const resolveBackendInternalUrl = () => {
     return `http://${process.env.BACKEND_HOSTPORT}/api`;
   }
 
-  return "";
+  return "http://127.0.0.1:5000/api";
 };
 
 const backendInternalUrl = resolveBackendInternalUrl();

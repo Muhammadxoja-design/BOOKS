@@ -1,6 +1,26 @@
 import { Session } from "next-auth";
 
-const baseUrl = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:5000/api";
+const resolveBaseUrl = () => {
+  if (process.env.NEXT_PUBLIC_API_URL) {
+    return process.env.NEXT_PUBLIC_API_URL;
+  }
+
+  if (typeof window === "undefined") {
+    if (process.env.BACKEND_INTERNAL_URL) {
+      return process.env.BACKEND_INTERNAL_URL.replace(/\/$/, "");
+    }
+
+    if (process.env.BACKEND_HOSTPORT) {
+      return `http://${process.env.BACKEND_HOSTPORT}/api`;
+    }
+
+    return "http://127.0.0.1:5000/api";
+  }
+
+  return "/backend";
+};
+
+const baseUrl = resolveBaseUrl();
 
 const buildUrl = (path: string) =>
   `${baseUrl}${path.startsWith("/") ? path : `/${path}`}`;
