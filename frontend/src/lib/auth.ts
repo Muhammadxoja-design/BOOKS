@@ -10,7 +10,7 @@ const resolveApiUrl = () => {
     return `http://${process.env.BACKEND_HOSTPORT}/api`;
   }
 
-  return process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:5000/api";
+  return process.env.NEXT_PUBLIC_API_URL ?? "http://127.0.0.1:5001/api";
 };
 
 const apiUrl = resolveApiUrl();

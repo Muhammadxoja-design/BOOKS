@@ -2,7 +2,7 @@ import { spawn } from "node:child_process";
 
 const isProduction = process.env.NODE_ENV === "production";
 const frontendPort = String(process.env.PORT || 3000);
-const backendPort = "5000";
+const backendPort = process.env.BACKEND_PORT || "5001";
 const backendInternalUrl =
   process.env.BACKEND_INTERNAL_URL || `http://127.0.0.1:${backendPort}/api`;
 
