@@ -1,4 +1,5 @@
 import type { NextConfig } from "next";
+import path from "path";
 
 const resolveBackendInternalUrl = () => {
   if (process.env.BACKEND_INTERNAL_URL) {
@@ -34,6 +35,14 @@ const nextConfig: NextConfig = {
         destination: `${backendInternalUrl}/:path*`,
       },
     ];
+  },
+  webpack(config) {
+    config.resolve.alias = {
+      ...config.resolve.alias,
+      "@": path.resolve(__dirname, "src"),
+    };
+
+    return config;
   },
 };
 
