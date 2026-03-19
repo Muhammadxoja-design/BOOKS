@@ -1,23 +1,23 @@
 import { Session } from "next-auth";
 
 const resolveBaseUrl = () => {
+  if (typeof window !== "undefined") {
+    return "/backend";
+  }
+
+  if (process.env.BACKEND_INTERNAL_URL) {
+    return process.env.BACKEND_INTERNAL_URL.replace(/\/$/, "");
+  }
+
+  if (process.env.BACKEND_HOSTPORT) {
+    return `http://${process.env.BACKEND_HOSTPORT}/api`;
+  }
+
   if (process.env.NEXT_PUBLIC_API_URL) {
     return process.env.NEXT_PUBLIC_API_URL;
   }
 
-  if (typeof window === "undefined") {
-    if (process.env.BACKEND_INTERNAL_URL) {
-      return process.env.BACKEND_INTERNAL_URL.replace(/\/$/, "");
-    }
-
-    if (process.env.BACKEND_HOSTPORT) {
-      return `http://${process.env.BACKEND_HOSTPORT}/api`;
-    }
-
-    return "http://127.0.0.1:5001/api";
-  }
-
-  return "/backend";
+  return "http://127.0.0.1:5001/api";
 };
 
 const baseUrl = resolveBaseUrl();
