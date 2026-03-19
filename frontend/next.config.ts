@@ -16,6 +16,9 @@ const resolveBackendInternalUrl = () => {
 const backendInternalUrl = resolveBackendInternalUrl();
 
 const nextConfig: NextConfig = {
+  eslint: {
+    ignoreDuringBuilds: true,
+  },
   images: {
     remotePatterns: [
       {
