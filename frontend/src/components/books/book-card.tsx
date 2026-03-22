@@ -9,6 +9,7 @@ import {
   formatCurrency,
   formatDuration,
   getBookFormatLabel,
+  resolveAssetUrl,
   resolveBookHref,
 } from "@/lib/utils";
 
@@ -31,7 +32,7 @@ export function BookCard({
     <Surface className="group overflow-hidden">
       <div className="relative aspect-[4/4.7] overflow-hidden">
         <Image
-          src={book.coverImage}
+          src={resolveAssetUrl(book.coverImage)}
           alt={book.title}
           fill
           sizes={compact ? "(max-width: 768px) 100vw, 33vw" : "(max-width: 768px) 100vw, (max-width: 1280px) 50vw, 33vw"}

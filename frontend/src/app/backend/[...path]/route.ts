@@ -23,6 +23,10 @@ const buildBackendUrl = (path: string[]) => {
     return backendBaseUrl.replace(/\/api$/, "/health");
   }
 
+  if (path[0] === "uploads") {
+    return `${backendBaseUrl.replace(/\/api$/, "")}/${path.join("/")}`;
+  }
+
   if (path[0] === "api") {
     return `${backendBaseUrl.replace(/\/api$/, "")}/${path.join("/")}`;
   }
@@ -49,7 +53,7 @@ const proxy = async (
   };
 
   if (request.method !== "GET" && request.method !== "HEAD") {
-    init.body = await request.text();
+    init.body = Buffer.from(await request.arrayBuffer());
   }
 
   const response = await fetch(targetUrl, init);

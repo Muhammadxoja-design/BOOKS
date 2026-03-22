@@ -2,6 +2,7 @@ import { Request, Response } from "express";
 import { BookFormat } from "@prisma/client";
 import prisma from "../lib/prisma";
 import { getErrorMessage } from "../lib/http";
+import { normalizeStoredAssetUrl } from "../lib/uploads";
 
 const baseBookSelect = {
   id: true,
@@ -86,11 +87,23 @@ export const getHomeFeed = async (_req: Request, res: Response) => {
           revenue: stats[2]._sum.total ?? 0,
         },
       },
-      featured,
+      featured: featured.map((book) => ({
+        ...book,
+        coverImage: normalizeStoredAssetUrl(book.coverImage) ?? "",
+      })),
       sections: {
-        audioBooks,
-        pdfBooks,
-        storeBooks,
+        audioBooks: audioBooks.map((book) => ({
+          ...book,
+          coverImage: normalizeStoredAssetUrl(book.coverImage) ?? "",
+        })),
+        pdfBooks: pdfBooks.map((book) => ({
+          ...book,
+          coverImage: normalizeStoredAssetUrl(book.coverImage) ?? "",
+        })),
+        storeBooks: storeBooks.map((book) => ({
+          ...book,
+          coverImage: normalizeStoredAssetUrl(book.coverImage) ?? "",
+        })),
       },
       quotes,
       categories: categories.map((category) => ({

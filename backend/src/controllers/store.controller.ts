@@ -2,6 +2,7 @@ import { Response } from "express";
 import { OrderStatus, RewardType } from "@prisma/client";
 import prisma from "../lib/prisma";
 import { getErrorMessage } from "../lib/http";
+import { normalizeStoredAssetUrl } from "../lib/uploads";
 import { AuthRequest } from "../middlewares/auth.middleware";
 
 const cartSelect = {
@@ -35,6 +36,7 @@ const formatCart = (
           quantity: number;
           unitPrice: number;
           book: {
+            coverImage: string;
             price: number;
             salePrice: number | null;
           };
@@ -47,7 +49,13 @@ const formatCart = (
 
   return {
     id: cart?.id ?? null,
-    items,
+    items: items.map((item) => ({
+      ...item,
+      book: {
+        ...item.book,
+        coverImage: normalizeStoredAssetUrl(item.book.coverImage) ?? "",
+      },
+    })),
     summary: {
       itemCount: items.reduce((sum, item) => sum + item.quantity, 0),
       subtotal,
@@ -285,7 +293,7 @@ export const checkout = async (req: AuthRequest, res: Response) => {
             bookId: item.bookId,
             titleSnapshot: item.book.title,
             authorSnapshot: item.book.author,
-            coverSnapshot: item.book.coverImage,
+            coverSnapshot: normalizeStoredAssetUrl(item.book.coverImage) ?? item.book.coverImage,
             price: item.unitPrice,
             quantity: item.quantity,
           })),

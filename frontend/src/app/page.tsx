@@ -9,7 +9,7 @@ import { Pill } from "@/components/ui/pill";
 import { Surface } from "@/components/ui/surface";
 import { apiFetch } from "@/lib/api";
 import { HomeFeed } from "@/lib/types";
-import { formatCurrency } from "@/lib/utils";
+import { formatCurrency, resolveAssetUrl } from "@/lib/utils";
 
 const features = [
   {
@@ -207,7 +207,7 @@ export default function HomePage() {
                     >
                       <div className="relative h-20 w-16 overflow-hidden rounded-2xl">
                         <Image
-                          src={book.coverImage}
+                          src={resolveAssetUrl(book.coverImage)}
                           alt={book.title}
                           fill
                           sizes="64px"

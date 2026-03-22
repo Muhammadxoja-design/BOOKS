@@ -1,6 +1,7 @@
 import { Response } from "express";
 import prisma from "../lib/prisma";
 import { getErrorMessage } from "../lib/http";
+import { normalizeStoredAssetUrl } from "../lib/uploads";
 import { AuthRequest } from "../middlewares/auth.middleware";
 import { awardProgressEvent } from "../services/gamification.service";
 
@@ -36,7 +37,17 @@ export const getMyProgress = async (req: AuthRequest, res: Response) => {
       orderBy: { updatedAt: "desc" },
     });
 
-    res.status(200).json(progress);
+    res.status(200).json(
+      progress.map((item) => ({
+        ...item,
+        book: item.book
+          ? {
+              ...item.book,
+              coverImage: normalizeStoredAssetUrl(item.book.coverImage) ?? "",
+            }
+          : item.book,
+      })),
+    );
   } catch (error) {
     res.status(500).json({ message: getErrorMessage(error) });
   }

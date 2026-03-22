@@ -13,7 +13,7 @@ import { ProgressBar } from "@/components/ui/progress-bar";
 import { Surface } from "@/components/ui/surface";
 import { apiFetch, getToken } from "@/lib/api";
 import { Annotation, AnnotationType, Book, Discussion } from "@/lib/types";
-import { formatCurrency, formatRelativeDate } from "@/lib/utils";
+import { formatCurrency, formatRelativeDate, resolveAssetUrl } from "@/lib/utils";
 
 type BookDetail = Book & {
   createdAt?: string;
@@ -134,7 +134,7 @@ export function BookExperiencePage({
         <div className="relative overflow-hidden">
           <div className="absolute inset-0">
             <Image
-              src={book.backdropImage ?? book.coverImage}
+              src={resolveAssetUrl(book.backdropImage ?? book.coverImage)}
               alt={book.title}
               fill
               sizes="100vw"
@@ -145,7 +145,7 @@ export function BookExperiencePage({
           <div className="relative grid gap-8 p-8 md:p-10 lg:grid-cols-[0.8fr_1.2fr]">
             <div className="relative aspect-[4/5] w-full overflow-hidden rounded-[32px] shadow-2xl">
               <Image
-                src={book.coverImage}
+                src={resolveAssetUrl(book.coverImage)}
                 alt={book.title}
                 fill
                 sizes="(max-width: 1024px) 100vw, 33vw"

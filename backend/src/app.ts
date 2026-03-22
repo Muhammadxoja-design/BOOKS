@@ -1,6 +1,7 @@
 import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
+import path from "path";
 import adminRoutes from "./routes/admin.routes";
 import authRoutes from "./routes/auth.routes";
 import bookRoutes from "./routes/book.routes";
@@ -9,10 +10,15 @@ import progressRoutes from "./routes/progress.routes";
 import quizRoutes from "./routes/quiz.routes";
 import storeRoutes from "./routes/store.routes";
 import userRoutes from "./routes/user.routes";
+import { errorHandler, notFoundHandler } from "./lib/errors";
+import { ensureUploadDirectories } from "./lib/uploads";
 
 dotenv.config();
 
 const app = express();
+const uploadsDirectory = path.resolve(__dirname, "../uploads");
+
+ensureUploadDirectories();
 
 app.use(
   cors({
@@ -20,7 +26,9 @@ app.use(
     credentials: true,
   }),
 );
-app.use(express.json({ limit: "1mb" }));
+app.use(express.json({ limit: "10mb" }));
+app.use(express.urlencoded({ extended: true, limit: "10mb" }));
+app.use("/uploads", express.static(uploadsDirectory));
 
 app.get("/", (_req, res) => {
   res.status(200).json({
@@ -60,8 +68,7 @@ app.use("/api/store", storeRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/admin", adminRoutes);
 
-app.use((_req, res) => {
-  res.status(404).json({ message: "Route not found." });
-});
+app.use(notFoundHandler);
+app.use(errorHandler);
 
 export default app;

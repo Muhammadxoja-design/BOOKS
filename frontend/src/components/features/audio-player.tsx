@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { FastForward, PlayCircle } from "lucide-react";
 import { apiFetch } from "@/lib/api";
 import { Book } from "@/lib/types";
-import { formatDuration } from "@/lib/utils";
+import { formatDuration, resolveAssetUrl } from "@/lib/utils";
 import { Surface } from "@/components/ui/surface";
 
 const speeds = [1, 1.5, 2];
@@ -92,7 +92,7 @@ export function AudioPlayer({
         ref={audioRef}
         controls
         preload="metadata"
-        src={book.audioUrl ?? book.sampleAudioUrl ?? ""}
+        src={resolveAssetUrl(book.audioUrl ?? book.sampleAudioUrl ?? "")}
         className="w-full"
         onTimeUpdate={(event) => {
           const currentTime = Math.round(event.currentTarget.currentTime);

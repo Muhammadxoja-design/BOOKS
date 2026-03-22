@@ -1,14 +1,17 @@
 export type UserRole = "USER" | "ADMIN";
 export type BookFormat = "AUDIO" | "PDF" | "STORE";
 export type AnnotationType = "HIGHLIGHT" | "UNDERLINE" | "NOTE";
+export type AuthProvider = "CREDENTIALS" | "GOOGLE" | "TELEGRAM";
 
 export interface Category {
-  id?: string;
+  id: string;
   name: string;
   slug: string;
-  description?: string;
+  description: string;
   accentColor: string;
   bookCount?: number;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface Book {
@@ -38,8 +41,16 @@ export interface Book {
   quote?: string | null;
   pointsReward: number;
   isFeatured?: boolean;
+  isPublished?: boolean;
+  categoryId?: string | null;
+  _count?: {
+    progresses: number;
+    discussions: number;
+  };
   category?: Category | null;
   progress?: ProgressRecord | null;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface ProgressRecord {
@@ -254,4 +265,20 @@ export interface SessionUser {
   image?: string | null;
   points: number;
   streakDays: number;
+  telegramId?: string;
+  authProvider?: AuthProvider;
+}
+
+export interface AdminUser {
+  id: string;
+  name: string;
+  email: string;
+  telegramId?: string | null;
+  telegramUsername?: string | null;
+  authProvider: AuthProvider;
+  role: UserRole;
+  isActive: boolean;
+  points: number;
+  streakDays: number;
+  createdAt: string;
 }

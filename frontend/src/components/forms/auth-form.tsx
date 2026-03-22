@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { signIn } from "next-auth/react";
 import { apiFetch } from "@/lib/api";
 import { Surface } from "@/components/ui/surface";
+import { SocialAuthPanel } from "@/components/forms/social-auth-panel";
 
 export function AuthForm({ mode }: { mode: "login" | "register" }) {
   const router = useRouter();
@@ -64,20 +65,22 @@ export function AuthForm({ mode }: { mode: "login" | "register" }) {
       <div className="grid gap-8 p-8 md:p-10">
         <div>
           <p className="text-xs font-semibold uppercase tracking-[0.32em] text-[color:var(--muted-foreground)]">
-            {isRegister ? "Create account" : "Welcome back"}
+            {isRegister ? "Ro‘yxatdan o‘tish" : "Kirish"}
           </p>
           <h1 className="mt-4 font-serif text-5xl text-[color:var(--foreground)]">
-            {isRegister ? "Build your reading engine" : "Continue your streak"}
+            {isRegister ? "Kitob platformasiga account oching" : "Platformaga xavfsiz kiring"}
           </h1>
           <p className="mt-4 text-[color:var(--muted-foreground)]">
-            Secure JWT-backed authentication through NextAuth credentials flow.
+            Email/parol, Google OAuth 2.0 va Telegram Login Widget bir xil JWT oqimiga ulangan.
           </p>
         </div>
+
+        <SocialAuthPanel />
 
         <form className="grid gap-4" onSubmit={handleSubmit}>
           {isRegister ? (
             <label className="grid gap-2">
-              <span className="text-sm font-semibold text-[color:var(--foreground)]">Full name</span>
+              <span className="text-sm font-semibold text-[color:var(--foreground)]">Ism</span>
               <input
                 required
                 name="name"
@@ -99,13 +102,13 @@ export function AuthForm({ mode }: { mode: "login" | "register" }) {
           </label>
 
           <label className="grid gap-2">
-            <span className="text-sm font-semibold text-[color:var(--foreground)]">Password</span>
+            <span className="text-sm font-semibold text-[color:var(--foreground)]">Parol</span>
             <input
               required
               type="password"
               minLength={8}
               name="password"
-              placeholder="At least 8 characters"
+              placeholder="Kamida 8 ta belgi"
               className="rounded-2xl border border-[color:var(--border)] bg-[color:var(--bg)] px-4 py-3 outline-none transition focus:border-[color:var(--accent)]"
             />
           </label>
@@ -121,21 +124,17 @@ export function AuthForm({ mode }: { mode: "login" | "register" }) {
             disabled={pending}
             className="mt-3 rounded-full bg-[color:var(--foreground)] px-5 py-3 text-sm font-semibold text-[color:var(--bg)] disabled:opacity-60"
           >
-            {pending
-              ? "Please wait..."
-              : isRegister
-                ? "Create account"
-                : "Sign in"}
+            {pending ? "Kutilyapti..." : isRegister ? "Account yaratish" : "Kirish"}
           </button>
         </form>
 
         <p className="text-sm text-[color:var(--muted-foreground)]">
-          {isRegister ? "Already have an account?" : "Need a new account?"}{" "}
+          {isRegister ? "Akkauntingiz bormi?" : "Yangi akkaunt kerakmi?"}{" "}
           <Link
             href={isRegister ? "/login" : "/register"}
             className="font-semibold text-[color:var(--foreground)]"
           >
-            {isRegister ? "Sign in" : "Register"}
+            {isRegister ? "Kirish" : "Ro‘yxatdan o‘tish"}
           </Link>
         </p>
       </div>

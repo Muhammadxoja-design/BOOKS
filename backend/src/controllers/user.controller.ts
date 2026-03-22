@@ -2,6 +2,7 @@ import { Response } from "express";
 import { BookFormat } from "@prisma/client";
 import prisma from "../lib/prisma";
 import { getErrorMessage } from "../lib/http";
+import { normalizeStoredAssetUrl } from "../lib/uploads";
 import { AuthRequest } from "../middlewares/auth.middleware";
 
 const recommendationSelect = {
@@ -70,6 +71,7 @@ const buildRecommendations = async (userId: string) => {
 
   return recommendations.map((book) => ({
     ...book,
+    coverImage: normalizeStoredAssetUrl(book.coverImage) ?? "",
     reason: favoriteCategoryId
       ? `Recommended from your strongest category: ${book.category?.name ?? "general"}`
       : "Recommended from trending reader behavior.",
@@ -229,8 +231,24 @@ export const getDashboard = async (req: AuthRequest, res: Response) => {
         completedTitles: progress.filter((item) => item.isCompleted).length,
         readingHours: Number(totalReadingHours.toFixed(1)),
       },
-      continueReading: readingProgress,
-      continueListening: listeningProgress,
+      continueReading: readingProgress.map((item) => ({
+        ...item,
+        book: item.book
+          ? {
+              ...item.book,
+              coverImage: normalizeStoredAssetUrl(item.book.coverImage) ?? "",
+            }
+          : item.book,
+      })),
+      continueListening: listeningProgress.map((item) => ({
+        ...item,
+        book: item.book
+          ? {
+              ...item.book,
+              coverImage: normalizeStoredAssetUrl(item.book.coverImage) ?? "",
+            }
+          : item.book,
+      })),
       rewards,
       leaderboard,
       weeklyQuiz: weeklyQuiz

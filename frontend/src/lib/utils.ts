@@ -1,6 +1,7 @@
 import { type ClassValue, clsx } from "clsx";
 import { twMerge } from "tailwind-merge";
 import { Book, BookFormat } from "./types";
+import { resolveAssetUrl } from "./api";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -62,3 +63,5 @@ export const getBookFormatLabel = (format: BookFormat) => {
 
   return "Store";
 };
+
+export { resolveAssetUrl };

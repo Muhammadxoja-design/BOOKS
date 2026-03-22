@@ -21,6 +21,7 @@ const resolveBaseUrl = () => {
 };
 
 const baseUrl = resolveBaseUrl();
+const browserProxyBase = "/backend";
 
 const buildUrl = (path: string) =>
   `${baseUrl}${path.startsWith("/") ? path : `/${path}`}`;
@@ -72,7 +73,74 @@ export async function apiFetch<T>(
     throw new ApiError(message, response.status);
   }
 
+  if (response.status === 204) {
+    return undefined as T;
+  }
+
   return response.json() as Promise<T>;
 }
+
+export async function apiUpload<T>(
+  path: string,
+  options: {
+    method?: string;
+    body: FormData;
+    token?: string;
+    headers?: HeadersInit;
+  },
+): Promise<T> {
+  const response = await fetch(buildUrl(path), {
+    method: options.method ?? "POST",
+    headers: {
+      ...(options.token
+        ? {
+            Authorization: `Bearer ${options.token}`,
+          }
+        : {}),
+      ...options.headers,
+    },
+    body: options.body,
+    cache: "no-store",
+  });
+
+  if (!response.ok) {
+    let message = "Request failed";
+
+    try {
+      const payload = await response.json();
+      message = payload?.message ?? message;
+    } catch {
+      message = response.statusText || message;
+    }
+
+    throw new ApiError(message, response.status);
+  }
+
+  if (response.status === 204) {
+    return undefined as T;
+  }
+
+  return response.json() as Promise<T>;
+}
+
+export const resolveAssetUrl = (value?: string | null) => {
+  if (!value) {
+    return "";
+  }
+
+  if (/^https?:\/\//i.test(value)) {
+    return value;
+  }
+
+  if (value.startsWith("/backend/")) {
+    return value;
+  }
+
+  if (value.startsWith("/uploads/")) {
+    return `${browserProxyBase}${value}`;
+  }
+
+  return value;
+};
 
 export const getToken = (session: Session | null) => session?.accessToken ?? "";

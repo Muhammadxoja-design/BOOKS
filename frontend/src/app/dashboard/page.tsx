@@ -12,7 +12,7 @@ import { ProgressBar } from "@/components/ui/progress-bar";
 import { Surface } from "@/components/ui/surface";
 import { apiFetch, getToken } from "@/lib/api";
 import { DashboardData, ProgressRecord } from "@/lib/types";
-import { formatRelativeDate, resolveBookHref } from "@/lib/utils";
+import { formatRelativeDate, resolveAssetUrl, resolveBookHref } from "@/lib/utils";
 
 function ContinueCard({ item }: { item: ProgressRecord }) {
   if (!item.book) {
@@ -27,7 +27,7 @@ function ContinueCard({ item }: { item: ProgressRecord }) {
       <div className="flex gap-4">
         <div className="relative h-28 w-20 overflow-hidden rounded-[18px]">
           <Image
-            src={item.book.coverImage}
+            src={resolveAssetUrl(item.book.coverImage)}
             alt={item.book.title}
             fill
             sizes="80px"

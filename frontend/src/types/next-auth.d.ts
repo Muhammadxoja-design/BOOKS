@@ -8,6 +8,8 @@ declare module "next-auth" {
       role: "USER" | "ADMIN";
       points: number;
       streakDays: number;
+      telegramId: string;
+      authProvider: "CREDENTIALS" | "GOOGLE" | "TELEGRAM";
     };
   }
 
@@ -16,6 +18,8 @@ declare module "next-auth" {
     points: number;
     streakDays: number;
     accessToken: string;
+    telegramId?: string;
+    authProvider: "CREDENTIALS" | "GOOGLE" | "TELEGRAM";
   }
 }
 
@@ -25,5 +29,7 @@ declare module "next-auth/jwt" {
     points?: number;
     streakDays?: number;
     accessToken?: string;
+    telegramId?: string;
+    authProvider?: "CREDENTIALS" | "GOOGLE" | "TELEGRAM";
   }
 }

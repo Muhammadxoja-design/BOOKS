@@ -8,7 +8,7 @@ import { AuthGuard } from "@/components/features/auth-guard";
 import { Surface } from "@/components/ui/surface";
 import { apiFetch, getToken } from "@/lib/api";
 import { Cart } from "@/lib/types";
-import { formatCurrency } from "@/lib/utils";
+import { formatCurrency, resolveAssetUrl } from "@/lib/utils";
 
 export default function CartPage() {
   const { data: session } = useSession();
@@ -72,7 +72,7 @@ export default function CartPage() {
                   <Surface key={item.id} className="flex flex-wrap items-center gap-4 p-5">
                     <div className="relative h-28 w-20 overflow-hidden rounded-[18px]">
                       <Image
-                        src={item.book.coverImage}
+                        src={resolveAssetUrl(item.book.coverImage)}
                         alt={item.book.title}
                         fill
                         sizes="80px"

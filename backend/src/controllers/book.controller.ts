@@ -2,6 +2,7 @@ import { Response } from "express";
 import { AnnotationType, BookFormat, Prisma } from "@prisma/client";
 import prisma from "../lib/prisma";
 import { getErrorMessage } from "../lib/http";
+import { normalizeStoredAssetUrl } from "../lib/uploads";
 import { AuthRequest } from "../middlewares/auth.middleware";
 
 const bookCardSelect = Prisma.validator<Prisma.BookSelect>()({
@@ -35,6 +36,21 @@ const bookCardSelect = Prisma.validator<Prisma.BookSelect>()({
       accentColor: true,
     },
   },
+});
+
+const mapBookAssets = <T extends {
+  coverImage?: string | null;
+  backdropImage?: string | null;
+  sampleAudioUrl?: string | null;
+  audioUrl?: string | null;
+  pdfUrl?: string | null;
+}>(book: T) => ({
+  ...book,
+  coverImage: normalizeStoredAssetUrl(book.coverImage) ?? "",
+  backdropImage: normalizeStoredAssetUrl(book.backdropImage),
+  sampleAudioUrl: normalizeStoredAssetUrl(book.sampleAudioUrl),
+  audioUrl: normalizeStoredAssetUrl(book.audioUrl),
+  pdfUrl: normalizeStoredAssetUrl(book.pdfUrl),
 });
 
 export const getBooks = async (req: AuthRequest, res: Response) => {
@@ -77,7 +93,7 @@ export const getBooks = async (req: AuthRequest, res: Response) => {
 
     res.status(200).json(
       books.map((book: (typeof books)[number]) => ({
-        ...book,
+        ...mapBookAssets(book),
         currentPrice: book.salePrice ?? book.price,
         progress: Array.isArray(book.progresses) ? book.progresses[0] ?? null : null,
       })),
@@ -147,11 +163,11 @@ export const getBookBySlug = async (req: AuthRequest, res: Response) => {
     });
 
     res.status(200).json({
-      ...book,
+      ...mapBookAssets(book),
       currentPrice: book.salePrice ?? book.price,
       progress: Array.isArray(book.progresses) ? book.progresses[0] ?? null : null,
       annotations: Array.isArray(book.annotations) ? book.annotations : [],
-      relatedBooks,
+      relatedBooks: relatedBooks.map(mapBookAssets),
     });
   } catch (error) {
     res.status(500).json({ message: getErrorMessage(error) });

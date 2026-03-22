@@ -5,6 +5,7 @@ import { apiFetch } from "@/lib/api";
 import { Book } from "@/lib/types";
 import { ProgressBar } from "@/components/ui/progress-bar";
 import { Surface } from "@/components/ui/surface";
+import { resolveAssetUrl } from "@/lib/utils";
 
 export function PdfReader({
   book,
@@ -78,7 +79,7 @@ export function PdfReader({
         </div>
 
         <iframe
-          src={`${book.pdfUrl ?? ""}#page=${page}`}
+          src={`${resolveAssetUrl(book.pdfUrl ?? "")}#page=${page}`}
           className="h-[70vh] w-full bg-white"
           title={`${book.title} PDF reader`}
         />

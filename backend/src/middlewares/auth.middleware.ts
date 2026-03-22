@@ -9,6 +9,11 @@ export interface AuthRequest extends Request {
     name: string;
     role: UserRole;
   };
+  files?:
+    | {
+        [fieldname: string]: Express.Multer.File[];
+      }
+    | Express.Multer.File[];
 }
 
 const readBearerToken = (req: Request) => {
