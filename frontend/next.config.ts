@@ -7,7 +7,8 @@ const resolveBackendInternalUrl = () => {
   }
 
   if (process.env.BACKEND_HOSTPORT) {
-    return `http://${process.env.BACKEND_HOSTPORT}/api`;
+    const hostPort = process.env.BACKEND_HOSTPORT.replace(/\/$/, "");
+    return /^https?:\/\//i.test(hostPort) ? `${hostPort}/api` : `http://${hostPort}/api`;
   }
 
   return "http://127.0.0.1:5001/api";

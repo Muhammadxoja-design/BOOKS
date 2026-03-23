@@ -5,6 +5,9 @@ const normalizeApiBase = (value: string) => {
 
 const isAbsoluteHttpUrl = (value?: string | null) => Boolean(value && /^https?:\/\//i.test(value));
 
+const toApiBaseFromHostPort = (value: string) =>
+  isAbsoluteHttpUrl(value) ? normalizeApiBase(value) : normalizeApiBase(`http://${value}`);
+
 export const getBackendBaseCandidates = () => {
   const candidates = new Set<string>();
 
@@ -13,7 +16,7 @@ export const getBackendBaseCandidates = () => {
   }
 
   if (process.env.BACKEND_HOSTPORT) {
-    candidates.add(normalizeApiBase(`http://${process.env.BACKEND_HOSTPORT}`));
+    candidates.add(toApiBaseFromHostPort(process.env.BACKEND_HOSTPORT));
   }
 
   if (isAbsoluteHttpUrl(process.env.NEXT_PUBLIC_API_URL)) {
