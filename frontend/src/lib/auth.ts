@@ -1,51 +1,50 @@
 import NextAuth from "next-auth";
 import Credentials from "next-auth/providers/credentials";
-
-const resolveApiUrl = () => {
-  if (process.env.BACKEND_INTERNAL_URL) {
-    return process.env.BACKEND_INTERNAL_URL.replace(/\/$/, "");
-  }
-
-  if (process.env.BACKEND_HOSTPORT) {
-    return `http://${process.env.BACKEND_HOSTPORT}/api`;
-  }
-
-  return "http://127.0.0.1:5001/api";
-};
-
-const apiUrl = resolveApiUrl();
+import { getBackendBaseCandidates, shouldTryNextBackendCandidate } from "./backend-url";
 
 const exchangeWithBackend = async (path: string, body: Record<string, string>) => {
-  const response = await fetch(`${apiUrl}${path}`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(body),
-  });
+  for (const apiUrl of getBackendBaseCandidates()) {
+    try {
+      const response = await fetch(`${apiUrl}${path}`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(body),
+      });
 
-  if (!response.ok) {
-    return null;
+      if (!response.ok) {
+        if (shouldTryNextBackendCandidate(response.status)) {
+          continue;
+        }
+
+        return null;
+      }
+
+      const payload = await response.json();
+
+      if (!payload?.token || !payload?.user) {
+        return null;
+      }
+
+      return {
+        id: payload.user.id,
+        name: payload.user.name,
+        email: payload.user.email,
+        role: payload.user.role,
+        image: payload.user.avatarUrl,
+        points: payload.user.points,
+        streakDays: payload.user.streakDays,
+        accessToken: payload.token,
+        telegramId: payload.user.telegramId,
+        authProvider: payload.user.authProvider,
+      };
+    } catch {
+      continue;
+    }
   }
 
-  const payload = await response.json();
-
-  if (!payload?.token || !payload?.user) {
-    return null;
-  }
-
-  return {
-    id: payload.user.id,
-    name: payload.user.name,
-    email: payload.user.email,
-    role: payload.user.role,
-    image: payload.user.avatarUrl,
-    points: payload.user.points,
-    streakDays: payload.user.streakDays,
-    accessToken: payload.token,
-    telegramId: payload.user.telegramId,
-    authProvider: payload.user.authProvider,
-  };
+  return null;
 };
 
 export const { handlers, auth, signIn, signOut } = NextAuth({

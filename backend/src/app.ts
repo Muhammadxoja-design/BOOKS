@@ -1,6 +1,5 @@
 import express from "express";
 import cors from "cors";
-import dotenv from "dotenv";
 import path from "path";
 import adminRoutes from "./routes/admin.routes";
 import authRoutes from "./routes/auth.routes";
@@ -12,8 +11,6 @@ import storeRoutes from "./routes/store.routes";
 import userRoutes from "./routes/user.routes";
 import { errorHandler, notFoundHandler } from "./lib/errors";
 import { ensureUploadDirectories } from "./lib/uploads";
-
-dotenv.config();
 
 const app = express();
 const uploadsDirectory = path.resolve(__dirname, "../uploads");

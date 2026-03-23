@@ -24,6 +24,22 @@ export function AuthForm({ mode }: { mode: "login" | "register" }) {
     const password = String(formData.get("password") ?? "");
 
     try {
+      if (isRegister && !name) {
+        throw new Error("Ism kiritilishi shart.");
+      }
+
+      if (!email) {
+        throw new Error("Email kiritilishi shart.");
+      }
+
+      if (!password) {
+        throw new Error("Parol kiritilishi shart.");
+      }
+
+      if (password.length < 8) {
+        throw new Error("Parol kamida 8 ta belgidan iborat bo‘lishi kerak.");
+      }
+
       if (mode === "register") {
         await apiFetch("/auth/register", {
           method: "POST",

@@ -1,23 +1,12 @@
 import { Session } from "next-auth";
+import { resolvePrimaryBackendBaseUrl } from "./backend-url";
 
 const resolveBaseUrl = () => {
   if (typeof window !== "undefined") {
     return "/backend";
   }
 
-  if (process.env.BACKEND_INTERNAL_URL) {
-    return process.env.BACKEND_INTERNAL_URL.replace(/\/$/, "");
-  }
-
-  if (process.env.BACKEND_HOSTPORT) {
-    return `http://${process.env.BACKEND_HOSTPORT}/api`;
-  }
-
-  if (process.env.NEXT_PUBLIC_API_URL) {
-    return process.env.NEXT_PUBLIC_API_URL;
-  }
-
-  return "http://127.0.0.1:5001/api";
+  return resolvePrimaryBackendBaseUrl();
 };
 
 const baseUrl = resolveBaseUrl();

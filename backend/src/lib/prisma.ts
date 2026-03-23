@@ -1,3 +1,4 @@
+import "dotenv/config";
 import { PrismaPg } from "@prisma/adapter-pg";
 import { PrismaClient } from "@prisma/client";
 
@@ -13,6 +14,10 @@ if (!databaseUrl) {
 
 const adapter = new PrismaPg({
   connectionString: databaseUrl,
+  connectionTimeoutMillis: Number(process.env.DB_CONNECTION_TIMEOUT_MS ?? 5000),
+  query_timeout: Number(process.env.DB_QUERY_TIMEOUT_MS ?? 10000),
+  statement_timeout: Number(process.env.DB_STATEMENT_TIMEOUT_MS ?? 10000),
+  idleTimeoutMillis: Number(process.env.DB_IDLE_TIMEOUT_MS ?? 10000),
 });
 
 const prisma =
