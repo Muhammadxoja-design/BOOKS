@@ -9,32 +9,39 @@ const toApiBaseFromHostPort = (value: string) =>
   isAbsoluteHttpUrl(value) ? normalizeApiBase(value) : normalizeApiBase(`http://${value}`);
 
 export const getBackendBaseCandidates = () => {
-  const candidates = new Set<string>();
-
-  if (process.env.BACKEND_INTERNAL_URL) {
-    candidates.add(normalizeApiBase(process.env.BACKEND_INTERNAL_URL));
-  }
-
-  if (process.env.BACKEND_HOSTPORT) {
-    candidates.add(toApiBaseFromHostPort(process.env.BACKEND_HOSTPORT));
-  }
-
-  if (isAbsoluteHttpUrl(process.env.NEXT_PUBLIC_API_URL)) {
-    candidates.add(normalizeApiBase(process.env.NEXT_PUBLIC_API_URL as string));
-  }
+  const localCandidates: string[] = [];
+  const remoteCandidates: string[] = [];
+  const addUnique = (target: string[], value: string) => {
+    if (!target.includes(value)) {
+      target.push(value);
+    }
+  };
 
   const backendPort = process.env.BACKEND_PORT;
 
   if (backendPort) {
-    candidates.add(normalizeApiBase(`http://127.0.0.1:${backendPort}`));
+    addUnique(localCandidates, normalizeApiBase(`http://127.0.0.1:${backendPort}`));
+    addUnique(localCandidates, normalizeApiBase(`http://localhost:${backendPort}`));
   }
 
-  candidates.add("http://127.0.0.1:5001/api");
-  candidates.add("http://127.0.0.1:5000/api");
-  candidates.add("http://localhost:5001/api");
-  candidates.add("http://localhost:5000/api");
+  addUnique(localCandidates, "http://127.0.0.1:5001/api");
+  addUnique(localCandidates, "http://127.0.0.1:5000/api");
+  addUnique(localCandidates, "http://localhost:5001/api");
+  addUnique(localCandidates, "http://localhost:5000/api");
 
-  return [...candidates];
+  if (process.env.BACKEND_INTERNAL_URL) {
+    addUnique(remoteCandidates, normalizeApiBase(process.env.BACKEND_INTERNAL_URL));
+  }
+
+  if (process.env.BACKEND_HOSTPORT) {
+    addUnique(remoteCandidates, toApiBaseFromHostPort(process.env.BACKEND_HOSTPORT));
+  }
+
+  if (isAbsoluteHttpUrl(process.env.NEXT_PUBLIC_API_URL)) {
+    addUnique(remoteCandidates, normalizeApiBase(process.env.NEXT_PUBLIC_API_URL as string));
+  }
+
+  return [...localCandidates, ...remoteCandidates];
 };
 
 export const resolvePrimaryBackendBaseUrl = () => getBackendBaseCandidates()[0];

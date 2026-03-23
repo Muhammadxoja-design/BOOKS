@@ -3,8 +3,7 @@ import { spawn } from "node:child_process";
 const isProduction = process.env.NODE_ENV === "production";
 const frontendPort = String(process.env.PORT || 3000);
 const backendPort = process.env.BACKEND_PORT || "5001";
-const backendInternalUrl =
-  process.env.BACKEND_INTERNAL_URL || `http://127.0.0.1:${backendPort}/api`;
+const backendInternalUrl = `http://127.0.0.1:${backendPort}/api`;
 
 const processes = [];
 let exiting = false;
@@ -71,4 +70,5 @@ workspaceCommand("frontend", isProduction ? "start" : "dev", {
   PORT: frontendPort,
   NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL || "/backend",
   BACKEND_INTERNAL_URL: backendInternalUrl,
+  BACKEND_PORT: backendPort,
 });

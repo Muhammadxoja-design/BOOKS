@@ -48,6 +48,11 @@ const proxy = async (
     const targetUrl = new URL(buildBackendUrl(backendBaseUrl, path));
     targetUrl.search = request.nextUrl.search;
 
+     if (targetUrl.origin === request.nextUrl.origin) {
+      lastError = new Error(`Skipping same-origin backend candidate: ${targetUrl.origin}`);
+      continue;
+    }
+
     try {
       const response = await fetch(targetUrl, init);
 
