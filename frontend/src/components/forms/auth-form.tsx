@@ -4,7 +4,7 @@ import Link from "next/link";
 import { FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
 import { signIn } from "next-auth/react";
-import { apiFetch } from "@/lib/api";
+import { ApiError, apiFetch } from "@/lib/api";
 import { Surface } from "@/components/ui/surface";
 import { SocialAuthPanel } from "@/components/forms/social-auth-panel";
 
@@ -64,10 +64,15 @@ export function AuthForm({ mode }: { mode: "login" | "register" }) {
       router.push("/dashboard");
       router.refresh();
     } catch (submissionError) {
+      const message =
+        submissionError instanceof ApiError && submissionError.status >= 500
+          ? "Server vaqtincha ishlamayapti. Database ulanishini tekshiring."
+          : submissionError instanceof Error
+            ? submissionError.message
+            : "Authentication failed.";
+
       setError(
-        submissionError instanceof Error
-          ? submissionError.message
-          : "Authentication failed.",
+        message,
       );
     } finally {
       setPending(false);

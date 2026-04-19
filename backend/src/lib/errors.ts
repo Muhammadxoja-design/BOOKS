@@ -16,6 +16,11 @@ export const notFoundHandler = (_req: Request, _res: Response, next: NextFunctio
   next(new AppError("Route not found.", 404));
 };
 
+const isDatabaseConnectionError = (error: Error) =>
+  /Can't reach database server|ECONNREFUSED|ECONNRESET|ENOTFOUND|ETIMEDOUT|Connection terminated unexpectedly/i.test(
+    error.message,
+  );
+
 export const errorHandler = (
   error: unknown,
   _req: Request,
@@ -31,6 +36,21 @@ export const errorHandler = (
   }
 
   if (error instanceof Error) {
+    console.error(error);
+
+    if (isDatabaseConnectionError(error)) {
+      res.status(503).json({
+        message:
+          "Database is currently unavailable. Check DATABASE_URL, SSL settings, and database network access.",
+        ...(process.env.NODE_ENV !== "production"
+          ? {
+              details: error.message,
+            }
+          : {}),
+      });
+      return;
+    }
+
     res.status(500).json({
       message: error.message || "Unexpected server error.",
     });

@@ -10,6 +10,7 @@ import quizRoutes from "./routes/quiz.routes";
 import storeRoutes from "./routes/store.routes";
 import userRoutes from "./routes/user.routes";
 import { errorHandler, notFoundHandler } from "./lib/errors";
+import { getDatabaseHealth } from "./lib/prisma";
 import { ensureUploadDirectories } from "./lib/uploads";
 
 const app = express();
@@ -40,21 +41,29 @@ app.get("/", (_req, res) => {
   });
 });
 
-app.get("/health", (_req, res) => {
-  res.status(200).json({
-    status: "ok",
-    service: "bookora-api",
-    timestamp: new Date().toISOString(),
-  });
-});
+const healthHandler = async (_req: express.Request, res: express.Response) => {
+  const database = await getDatabaseHealth();
 
-app.get("/api/health", (_req, res) => {
-  res.status(200).json({
-    status: "ok",
+  res.status(database.ok ? 200 : 503).json({
+    status: database.ok ? "ok" : "degraded",
     service: "bookora-api",
+    database: database.ok ? "ok" : "unavailable",
+    ...(database.ok
+      ? {}
+      : {
+          message: "Database connection failed.",
+          ...(process.env.NODE_ENV !== "production"
+            ? {
+                details: database.error,
+              }
+            : {}),
+        }),
     timestamp: new Date().toISOString(),
   });
-});
+};
+
+app.get("/health", healthHandler);
+app.get("/api/health", healthHandler);
 
 app.use("/api/auth", authRoutes);
 app.use("/api/catalog", catalogRoutes);

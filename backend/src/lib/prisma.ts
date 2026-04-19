@@ -6,7 +6,26 @@ const globalForPrisma = globalThis as {
   prisma?: PrismaClient;
 };
 
-const databaseUrl = process.env.DATABASE_URL;
+const isSupabaseHost = (hostname: string) =>
+  hostname.endsWith(".supabase.co") || hostname.endsWith(".pooler.supabase.com");
+
+const normalizeDatabaseUrl = (value: string) => {
+  try {
+    const parsed = new URL(value);
+
+    if (isSupabaseHost(parsed.hostname) && !parsed.searchParams.has("sslmode")) {
+      parsed.searchParams.set("sslmode", "require");
+    }
+
+    return parsed.toString();
+  } catch {
+    return value;
+  }
+};
+
+const databaseUrl = process.env.DATABASE_URL
+  ? normalizeDatabaseUrl(process.env.DATABASE_URL)
+  : undefined;
 
 if (!databaseUrl) {
   throw new Error("DATABASE_URL is required.");
@@ -30,5 +49,23 @@ const prisma =
 if (process.env.NODE_ENV !== "production") {
   globalForPrisma.prisma = prisma;
 }
+
+export const assertDatabaseConnection = async () => {
+  await prisma.$queryRaw`SELECT 1`;
+};
+
+export const getDatabaseHealth = async () => {
+  try {
+    await assertDatabaseConnection();
+    return {
+      ok: true as const,
+    };
+  } catch (error) {
+    return {
+      ok: false as const,
+      error: error instanceof Error ? error.message : "Unexpected database error.",
+    };
+  }
+};
 
 export default prisma;
