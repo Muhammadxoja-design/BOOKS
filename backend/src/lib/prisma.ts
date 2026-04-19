@@ -9,12 +9,23 @@ const globalForPrisma = globalThis as {
 const isSupabaseHost = (hostname: string) =>
   hostname.endsWith(".supabase.co") || hostname.endsWith(".pooler.supabase.com");
 
+const isSupabaseDirectHost = (hostname: string) => hostname.startsWith("db.") && hostname.endsWith(".supabase.co");
+
 const normalizeDatabaseUrl = (value: string) => {
   try {
     const parsed = new URL(value);
 
     if (isSupabaseHost(parsed.hostname) && !parsed.searchParams.has("sslmode")) {
-      parsed.searchParams.set("sslmode", "require");
+      parsed.searchParams.set("sslmode", "verify-full");
+    }
+
+    if (
+      process.env.NODE_ENV === "production" &&
+      isSupabaseDirectHost(parsed.hostname)
+    ) {
+      console.warn(
+        "DATABASE_URL uses a direct Supabase host. On Render, prefer the Supavisor session pooler URL because direct Supabase hosts are IPv6-only.",
+      );
     }
 
     return parsed.toString();
