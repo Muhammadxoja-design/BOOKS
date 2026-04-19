@@ -15,6 +15,9 @@ const isSupabaseDirectHost = (hostname: string) =>
 const isSupabasePoolerHost = (hostname: string) =>
   hostname.endsWith(".pooler.supabase.com");
 
+const shouldKeepSupabaseTransactionPooler =
+  process.env.ALLOW_SUPABASE_TRANSACTION_POOLER === "true";
+
 const hasConfiguredRootCertificate = (parsed: URL) =>
   parsed.searchParams.has("sslrootcert") ||
   Boolean(process.env.PGSSLROOTCERT || process.env.DB_SSL_ROOT_CERT);
@@ -26,6 +29,14 @@ const normalizeDatabaseUrl = (value: string) => {
     const hasRootCertificate = hasConfiguredRootCertificate(parsed);
 
     if (isSupabasePoolerHost(parsed.hostname)) {
+      if (parsed.port === "6543" && !shouldKeepSupabaseTransactionPooler) {
+        console.warn(
+          "Supabase transaction pooler port 6543 is not ideal for this persistent Prisma backend. Switching to Supavisor session mode on port 5432.",
+        );
+        parsed.port = "5432";
+        parsed.searchParams.delete("pgbouncer");
+      }
+
       if (!configuredSslMode) {
         parsed.searchParams.set(
           "sslmode",
