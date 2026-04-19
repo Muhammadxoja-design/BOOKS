@@ -4,14 +4,19 @@ const isProduction = process.env.NODE_ENV === "production";
 const frontendPort = String(process.env.PORT || 3000);
 const backendPort = process.env.BACKEND_PORT || "5001";
 const backendInternalUrl = `http://127.0.0.1:${backendPort}/api`;
+const isWindows = process.platform === "win32";
 
 const processes = [];
 let exiting = false;
 
 const workspaceCommand = (workspace, script, extraEnv = {}) => {
+  const command = isWindows ? "cmd.exe" : "npm";
+  const args = isWindows
+    ? ["/d", "/s", "/c", "npm", "run", script, "--workspace", workspace]
+    : ["run", script, "--workspace", workspace];
   const child = spawn(
-    "npm",
-    ["run", script, "--workspace", workspace],
+    command,
+    args,
     {
       stdio: "inherit",
       env: {

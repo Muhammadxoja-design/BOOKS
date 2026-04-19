@@ -2,6 +2,21 @@ import NextAuth from "next-auth";
 import Credentials from "next-auth/providers/credentials";
 import { getBackendBaseCandidates, shouldTryNextBackendCandidate } from "./backend-url";
 
+const resolveAuthSecret = () => {
+  const configuredSecret =
+    process.env.AUTH_SECRET ?? process.env.NEXTAUTH_SECRET ?? process.env.JWT_SECRET;
+
+  if (configuredSecret) {
+    return configuredSecret;
+  }
+
+  if (process.env.NODE_ENV !== "production") {
+    return "bookora-dev-auth-secret";
+  }
+
+  return undefined;
+};
+
 const exchangeWithBackend = async (path: string, body: Record<string, string>) => {
   for (const apiUrl of getBackendBaseCandidates()) {
     try {
@@ -48,6 +63,7 @@ const exchangeWithBackend = async (path: string, body: Record<string, string>) =
 };
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
+  secret: resolveAuthSecret(),
   session: {
     strategy: "jwt",
   },

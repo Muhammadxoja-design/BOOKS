@@ -12,6 +12,9 @@ declare global {
           initialize: (config: {
             client_id: string;
             callback: (response: { credential?: string }) => void;
+            ux_mode?: "popup" | "redirect";
+            use_fedcm_for_button?: boolean;
+            button_auto_select?: boolean;
           }) => void;
           renderButton: (
             element: HTMLElement,
@@ -26,6 +29,7 @@ declare global {
 
 const GOOGLE_SCRIPT_ID = "google-identity-script";
 const TELEGRAM_SCRIPT_ID = "telegram-login-script";
+const GOOGLE_CLIENT_ID_SUFFIX = ".apps.googleusercontent.com";
 
 const loadScript = (id: string, src: string) =>
   new Promise<void>((resolve, reject) => {
@@ -44,17 +48,23 @@ const loadScript = (id: string, src: string) =>
     document.body.appendChild(script);
   });
 
+const isGoogleClientIdConfigured = (value?: string) =>
+  Boolean(value?.trim().endsWith(GOOGLE_CLIENT_ID_SUFFIX));
+
 export function SocialAuthPanel() {
   const router = useRouter();
   const googleButtonRef = useRef<HTMLDivElement | null>(null);
   const telegramContainerRef = useRef<HTMLDivElement | null>(null);
   const [error, setError] = useState("");
   const [pendingProvider, setPendingProvider] = useState<"google" | "telegram" | "">("");
+  const googleClientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID?.trim();
+  const telegramBotUsername = process.env.NEXT_PUBLIC_TELEGRAM_BOT_USERNAME?.trim();
+  const googleReady = isGoogleClientIdConfigured(googleClientId);
+  const googleConfigured = Boolean(googleClientId);
+  const telegramReady = Boolean(telegramBotUsername);
 
   useEffect(() => {
-    const googleClientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
-
-    if (!googleClientId || !googleButtonRef.current) {
+    if (!googleReady || !googleButtonRef.current || !googleClientId) {
       return;
     }
 
@@ -67,6 +77,8 @@ export function SocialAuthPanel() {
 
       window.google.accounts.id.initialize({
         client_id: googleClientId,
+        ux_mode: "popup",
+        use_fedcm_for_button: true,
         callback: async (response) => {
           if (!response.credential) {
             setError("Google token olinmadi.");
@@ -105,11 +117,9 @@ export function SocialAuthPanel() {
     void initializeGoogle().catch(() => {
       setError("Google login skriptini yuklab bo‘lmadi.");
     });
-  }, [router]);
+  }, [googleClientId, googleReady, router]);
 
   useEffect(() => {
-    const telegramBotUsername = process.env.NEXT_PUBLIC_TELEGRAM_BOT_USERNAME;
-
     if (!telegramBotUsername || !telegramContainerRef.current) {
       return;
     }
@@ -168,10 +178,7 @@ export function SocialAuthPanel() {
     return () => {
       delete window.onTelegramAuth;
     };
-  }, [router]);
-
-  const googleReady = Boolean(process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID);
-  const telegramReady = Boolean(process.env.NEXT_PUBLIC_TELEGRAM_BOT_USERNAME);
+  }, [router, telegramBotUsername]);
 
   return (
     <div className="grid gap-4 rounded-[28px] border border-[color:var(--border)] bg-[color:var(--bg)] p-5">
@@ -193,6 +200,10 @@ export function SocialAuthPanel() {
           <p className="mb-3 text-sm font-semibold text-[color:var(--foreground)]">Google</p>
           {googleReady ? (
             <div ref={googleButtonRef} className="min-h-11" />
+          ) : googleConfigured ? (
+            <p className="text-sm text-[color:var(--muted-foreground)]">
+              `NEXT_PUBLIC_GOOGLE_CLIENT_ID` `.apps.googleusercontent.com` bilan tugashi kerak.
+            </p>
           ) : (
             <p className="text-sm text-[color:var(--muted-foreground)]">
               `NEXT_PUBLIC_GOOGLE_CLIENT_ID` yo‘q.
