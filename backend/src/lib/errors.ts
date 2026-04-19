@@ -21,6 +21,10 @@ const isDatabaseConnectionError = (error: Error) =>
     error.message,
   );
 
+const isDatabaseSchemaError = (error: Error) =>
+  ("code" in error && error.code === "P2021") ||
+  /The table .* does not exist in the current database/i.test(error.message);
+
 export const errorHandler = (
   error: unknown,
   _req: Request,
@@ -42,6 +46,19 @@ export const errorHandler = (
       res.status(503).json({
         message:
           "Database is currently unavailable. Check DATABASE_URL, SSL settings, and database network access.",
+        ...(process.env.NODE_ENV !== "production"
+          ? {
+              details: error.message,
+            }
+          : {}),
+      });
+      return;
+    }
+
+    if (isDatabaseSchemaError(error)) {
+      res.status(503).json({
+        message:
+          "Database schema is not ready yet. Wait for Prisma schema sync to finish and retry.",
         ...(process.env.NODE_ENV !== "production"
           ? {
               details: error.message,

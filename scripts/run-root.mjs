@@ -127,6 +127,29 @@ process.on("SIGINT", () => shutdown("SIGINT"));
 process.on("SIGTERM", () => shutdown("SIGTERM"));
 
 const startCombinedRuntime = async () => {
+  workspaceCommand("frontend", isProduction ? "start" : "dev", {
+    PORT: frontendPort,
+    NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL || "/backend",
+    BACKEND_INTERNAL_URL: backendInternalUrl,
+    BACKEND_PORT: backendPort,
+  });
+
+  if (isCombinedRenderRuntime) {
+    try {
+      console.log("Applying Prisma schema before starting backend in combined Render runtime...");
+      await runWorkspaceScript("backend", "prisma:push");
+      console.log("Prisma schema sync completed for combined Render runtime.");
+    } catch (error) {
+      console.error(
+        "Prisma schema sync failed. Backend will still start, but database-backed routes may fail until the schema is applied.",
+      );
+
+      if (error instanceof Error) {
+        console.error(error.message);
+      }
+    }
+  }
+
   workspaceCommand("backend", isProduction ? "start" : "dev", {
     PORT: backendPort,
     ...(isCombinedRenderRuntime
@@ -136,29 +159,6 @@ const startCombinedRuntime = async () => {
         }
       : {}),
   });
-
-  workspaceCommand("frontend", isProduction ? "start" : "dev", {
-    PORT: frontendPort,
-    NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL || "/backend",
-    BACKEND_INTERNAL_URL: backendInternalUrl,
-    BACKEND_PORT: backendPort,
-  });
-
-  if (isCombinedRenderRuntime) {
-    void runWorkspaceScript("backend", "prisma:push")
-      .then(() => {
-        console.log("Prisma schema sync completed for combined Render runtime.");
-      })
-      .catch((error) => {
-        console.error(
-          "Prisma schema sync failed. Database-backed routes may fail until the schema is applied.",
-        );
-
-        if (error instanceof Error) {
-          console.error(error.message);
-        }
-      });
-  }
 };
 
 void startCombinedRuntime();
