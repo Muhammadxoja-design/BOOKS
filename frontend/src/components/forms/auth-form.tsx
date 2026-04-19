@@ -58,6 +58,10 @@ export function AuthForm({ mode }: { mode: "login" | "register" }) {
       });
 
       if (result?.error) {
+        if (result.code === "service_unavailable") {
+          throw new Error("Server vaqtincha ishlamayapti. Database ulanishini tekshiring.");
+        }
+
         throw new Error("Email yoki parol noto'g'ri.");
       }
 

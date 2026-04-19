@@ -1,6 +1,15 @@
 import NextAuth from "next-auth";
+import { CredentialsSignin } from "next-auth";
 import Credentials from "next-auth/providers/credentials";
-import { getBackendBaseCandidates, shouldTryNextBackendCandidate } from "./backend-url";
+import { getBackendBaseCandidates } from "./backend-url";
+
+class ServiceUnavailableCredentialsError extends CredentialsSignin {
+  code = "service_unavailable";
+
+  constructor(message = "Authentication service is temporarily unavailable.") {
+    super(message);
+  }
+}
 
 const resolveAuthSecret = () => {
   const configuredSecret =
@@ -17,6 +26,9 @@ const resolveAuthSecret = () => {
   return undefined;
 };
 
+const shouldTryNextBackendCandidateForAuth = (status?: number) =>
+  status === 404 || status === 502 || status === 504;
+
 const exchangeWithBackend = async (path: string, body: Record<string, string>) => {
   for (const apiUrl of getBackendBaseCandidates()) {
     try {
@@ -29,8 +41,12 @@ const exchangeWithBackend = async (path: string, body: Record<string, string>) =
       });
 
       if (!response.ok) {
-        if (shouldTryNextBackendCandidate(response.status)) {
+        if (shouldTryNextBackendCandidateForAuth(response.status)) {
           continue;
+        }
+
+        if (response.status >= 500 || response.status === 503) {
+          throw new ServiceUnavailableCredentialsError();
         }
 
         return null;
@@ -54,12 +70,16 @@ const exchangeWithBackend = async (path: string, body: Record<string, string>) =
         telegramId: payload.user.telegramId,
         authProvider: payload.user.authProvider,
       };
-    } catch {
+    } catch (error) {
+      if (error instanceof ServiceUnavailableCredentialsError) {
+        throw error;
+      }
+
       continue;
     }
   }
 
-  return null;
+  throw new ServiceUnavailableCredentialsError();
 };
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
@@ -68,6 +88,34 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     strategy: "jwt",
   },
   trustHost: true,
+  logger: {
+    error(error) {
+      if (
+        error instanceof CredentialsSignin &&
+        error.code === "service_unavailable"
+      ) {
+        console.warn(
+          "[auth][warn] Authentication service is temporarily unavailable.",
+        );
+        return;
+      }
+
+      const name = error instanceof Error && "type" in error ? String(error.type) : error.name;
+      console.error(`[auth][error] ${name}: ${error.message}`);
+
+      if (
+        "cause" in error &&
+        error.cause &&
+        typeof error.cause === "object" &&
+        "err" in error.cause &&
+        error.cause.err instanceof Error
+      ) {
+        console.error("[auth][cause]:", error.cause.err.stack);
+      } else if (error.stack) {
+        console.error(error.stack.replace(/.*/, "").substring(1));
+      }
+    },
+  },
   providers: [
     Credentials({
       id: "credentials",
