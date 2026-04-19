@@ -122,6 +122,14 @@ Preferred Render setup is a Blueprint from [render.yaml](/home/fsociety/Codes/BO
 4. After first deploy, open the `bookora-frontend` service settings and set `NEXTAUTH_URL` to the frontend Render domain or your custom domain.
 5. If you want demo content, open the backend shell and run `npm run seed`.
 
+Important:
+
+- Do not deploy the repository root as a single Render web service with `npm run dev` or `npm run start`.
+- Render should run two separate services from this repo:
+- `backend` as its own service
+- `frontend` as its own service
+- If you use Supabase instead of the Render-managed database, do not use the direct `db.<project>.supabase.co:5432` host on Render. Render is IPv4-only, so use the Supavisor Session pooler connection string instead.
+
 ## Notes
 
 - Frontend build is clean and production-buildable.
