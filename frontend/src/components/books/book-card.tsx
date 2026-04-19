@@ -29,14 +29,14 @@ export function BookCard({
   const Icon = icons[book.format];
 
   return (
-    <Surface className="group overflow-hidden">
+    <Surface className="group overflow-hidden transition-all duration-500 hover:-translate-y-2 hover:shadow-2xl hover:shadow-[color:var(--accent-2)]/20 hover:border-[color:var(--accent-2)]/40 ring-1 ring-transparent hover:ring-[color:var(--accent-2)]/30 backdrop-blur-md">
       <div className="relative aspect-[4/4.7] overflow-hidden">
         <Image
           src={resolveAssetUrl(book.coverImage)}
           alt={book.title}
           fill
           sizes={compact ? "(max-width: 768px) 100vw, 33vw" : "(max-width: 768px) 100vw, (max-width: 1280px) 50vw, 33vw"}
-          className="object-cover transition duration-500 group-hover:scale-105"
+          className="object-cover transition duration-700 ease-[cubic-bezier(0.25,1,0.5,1)] group-hover:scale-[1.08] group-hover:-rotate-1"
         />
         <div className="absolute inset-0 bg-[linear-gradient(180deg,transparent,rgba(2,6,23,0.85))]" />
         <div className="absolute left-4 right-4 top-4 flex items-center justify-between">
@@ -102,9 +102,10 @@ export function BookCard({
 
           <Link
             href={resolveBookHref(book)}
-            className="rounded-full bg-[color:var(--foreground)] px-4 py-2 text-sm font-semibold text-[color:var(--bg)]"
+            className="relative overflow-hidden rounded-full bg-[color:var(--foreground)] px-5 py-2 text-sm font-semibold text-[color:var(--bg)] shadow-md transition-all duration-300 hover:shadow-lg hover:shadow-[color:var(--foreground)]/30 active:scale-95 group/btn"
           >
-            {book.format === "STORE" ? "View store" : "Open"}
+            <span className="absolute inset-0 z-0 bg-[linear-gradient(90deg,transparent,rgba(255,255,255,0.3),transparent)] opacity-0 transition-opacity duration-300 group-hover/btn:opacity-100 group-hover/btn:animate-[shimmer_2s_infinite]" />
+            <span className="relative z-10">{book.format === "STORE" ? "View store" : "Start Reading"}</span>
           </Link>
         </div>
       </div>

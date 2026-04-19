@@ -77,3 +77,10 @@ textarea {
   font-size: clamp(2rem, 4vw, 3.4rem);
   line-height: 1;
 }
+
+@keyframes shimmer {
+  0% { transform: translateX(-150%); }
+  50% { transform: translateX(150%); }
+  100% { transform: translateX(150%); }
+}
+
