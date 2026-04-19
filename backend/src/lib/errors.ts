@@ -17,7 +17,7 @@ export const notFoundHandler = (_req: Request, _res: Response, next: NextFunctio
 };
 
 const isDatabaseConnectionError = (error: Error) =>
-  /Can't reach database server|ECONNREFUSED|ECONNRESET|ENOTFOUND|ETIMEDOUT|Connection terminated unexpectedly/i.test(
+  /Can't reach database server|ECONNREFUSED|ECONNRESET|ENOTFOUND|ETIMEDOUT|Connection terminated unexpectedly|self-signed certificate in certificate chain|TlsConnectionError/i.test(
     error.message,
   );
 

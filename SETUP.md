@@ -129,6 +129,7 @@ Important:
 - `backend` as its own service
 - `frontend` as its own service
 - If you use Supabase instead of the Render-managed database, do not use the direct `db.<project>.supabase.co:5432` host on Render. Render is IPv4-only, so use the Supavisor Session pooler connection string instead.
+- For the Supavisor Session pooler on Render, prefer `sslmode=require&uselibpqcompat=true` unless you also provide a trusted root certificate for `verify-full`.
 
 ## Notes
 

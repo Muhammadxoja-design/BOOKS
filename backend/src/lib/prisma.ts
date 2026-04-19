@@ -9,13 +9,47 @@ const globalForPrisma = globalThis as {
 const isSupabaseHost = (hostname: string) =>
   hostname.endsWith(".supabase.co") || hostname.endsWith(".pooler.supabase.com");
 
-const isSupabaseDirectHost = (hostname: string) => hostname.startsWith("db.") && hostname.endsWith(".supabase.co");
+const isSupabaseDirectHost = (hostname: string) =>
+  hostname.startsWith("db.") && hostname.endsWith(".supabase.co");
+
+const isSupabasePoolerHost = (hostname: string) =>
+  hostname.endsWith(".pooler.supabase.com");
+
+const hasConfiguredRootCertificate = (parsed: URL) =>
+  parsed.searchParams.has("sslrootcert") ||
+  Boolean(process.env.PGSSLROOTCERT || process.env.DB_SSL_ROOT_CERT);
 
 const normalizeDatabaseUrl = (value: string) => {
   try {
     const parsed = new URL(value);
+    const configuredSslMode = parsed.searchParams.get("sslmode");
+    const hasRootCertificate = hasConfiguredRootCertificate(parsed);
 
-    if (isSupabaseHost(parsed.hostname) && !parsed.searchParams.has("sslmode")) {
+    if (isSupabasePoolerHost(parsed.hostname)) {
+      if (!configuredSslMode) {
+        parsed.searchParams.set(
+          "sslmode",
+          hasRootCertificate ? "verify-full" : "require",
+        );
+      }
+
+      if (
+        parsed.searchParams.get("sslmode") === "verify-full" &&
+        !hasRootCertificate
+      ) {
+        console.warn(
+          "Supabase Session pooler with sslmode=verify-full requires a trusted root certificate. Falling back to sslmode=require with uselibpqcompat=true.",
+        );
+        parsed.searchParams.set("sslmode", "require");
+      }
+
+      if (
+        parsed.searchParams.get("sslmode") === "require" &&
+        !parsed.searchParams.has("uselibpqcompat")
+      ) {
+        parsed.searchParams.set("uselibpqcompat", "true");
+      }
+    } else if (isSupabaseHost(parsed.hostname) && !configuredSslMode) {
       parsed.searchParams.set("sslmode", "verify-full");
     }
 
