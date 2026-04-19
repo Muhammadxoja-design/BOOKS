@@ -26,11 +26,46 @@ if (isCombinedRenderRuntime && process.env.ALLOW_COMBINED_RENDER_SERVICE !== "tr
 const processes = [];
 let exiting = false;
 
-const workspaceCommand = (workspace, script, extraEnv = {}) => {
+const getWorkspaceInvocation = (workspace, script) => {
   const command = isWindows ? "cmd.exe" : "npm";
   const args = isWindows
     ? ["/d", "/s", "/c", "npm", "run", script, "--workspace", workspace]
     : ["run", script, "--workspace", workspace];
+  return { command, args };
+};
+
+const runWorkspaceScript = (workspace, script, extraEnv = {}) =>
+  new Promise((resolve, reject) => {
+    const { command, args } = getWorkspaceInvocation(workspace, script);
+    const child = spawn(
+      command,
+      args,
+      {
+        stdio: "inherit",
+        env: {
+          ...process.env,
+          ...extraEnv,
+        },
+      },
+    );
+
+    child.on("exit", (code, signal) => {
+      if (signal) {
+        reject(new Error(`${workspace}:${script} exited with signal ${signal}`));
+        return;
+      }
+
+      if ((code ?? 0) !== 0) {
+        reject(new Error(`${workspace}:${script} exited with code ${code ?? 0}`));
+        return;
+      }
+
+      resolve(undefined);
+    });
+  });
+
+const workspaceCommand = (workspace, script, extraEnv = {}) => {
+  const { command, args } = getWorkspaceInvocation(workspace, script);
   const child = spawn(
     command,
     args,
@@ -91,19 +126,38 @@ const shutdown = (signal) => {
 process.on("SIGINT", () => shutdown("SIGINT"));
 process.on("SIGTERM", () => shutdown("SIGTERM"));
 
-workspaceCommand("backend", isProduction ? "start" : "dev", {
-  PORT: backendPort,
-  ...(isCombinedRenderRuntime
-    ? {
-        REQUIRE_DB_ON_START: process.env.REQUIRE_DB_ON_START || "false",
-        SERVER_HOST: process.env.SERVER_HOST || "127.0.0.1",
-      }
-    : {}),
-});
+const startCombinedRuntime = async () => {
+  if (isCombinedRenderRuntime) {
+    try {
+      console.log("Applying Prisma schema before starting combined Render runtime...");
+      await runWorkspaceScript("backend", "prisma:push");
+    } catch (error) {
+      console.error(
+        "Prisma schema sync failed. Continuing startup, but database-backed routes may fail until the schema is applied.",
+      );
 
-workspaceCommand("frontend", isProduction ? "start" : "dev", {
-  PORT: frontendPort,
-  NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL || "/backend",
-  BACKEND_INTERNAL_URL: backendInternalUrl,
-  BACKEND_PORT: backendPort,
-});
+      if (error instanceof Error) {
+        console.error(error.message);
+      }
+    }
+  }
+
+  workspaceCommand("backend", isProduction ? "start" : "dev", {
+    PORT: backendPort,
+    ...(isCombinedRenderRuntime
+      ? {
+          REQUIRE_DB_ON_START: process.env.REQUIRE_DB_ON_START || "false",
+          SERVER_HOST: process.env.SERVER_HOST || "127.0.0.1",
+        }
+      : {}),
+  });
+
+  workspaceCommand("frontend", isProduction ? "start" : "dev", {
+    PORT: frontendPort,
+    NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL || "/backend",
+    BACKEND_INTERNAL_URL: backendInternalUrl,
+    BACKEND_PORT: backendPort,
+  });
+};
+
+void startCombinedRuntime();
