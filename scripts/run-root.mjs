@@ -96,6 +96,7 @@ workspaceCommand("backend", isProduction ? "start" : "dev", {
   ...(isCombinedRenderRuntime
     ? {
         REQUIRE_DB_ON_START: process.env.REQUIRE_DB_ON_START || "false",
+        SERVER_HOST: process.env.SERVER_HOST || "127.0.0.1",
       }
     : {}),
 });

@@ -3,6 +3,7 @@ import app from "./app";
 import { assertDatabaseConnection } from "./lib/prisma";
 
 const port = Number(process.env.PORT || 5000);
+const host = process.env.SERVER_HOST || "0.0.0.0";
 const shouldExitOnDbPreflightFailure = process.env.REQUIRE_DB_ON_START === "true";
 
 const startServer = async () => {
@@ -20,8 +21,8 @@ const startServer = async () => {
     );
   }
 
-  app.listen(port, () => {
-    console.log(`Bookora API running on http://localhost:${port}`);
+  app.listen(port, host, () => {
+    console.log(`Bookora API running on http://${host}:${port}`);
   });
 };
 
