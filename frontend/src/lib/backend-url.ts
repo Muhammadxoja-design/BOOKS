@@ -41,6 +41,10 @@ export const getBackendBaseCandidates = () => {
     addUnique(remoteCandidates, normalizeApiBase(process.env.NEXT_PUBLIC_API_URL as string));
   }
 
+  if (process.env.NODE_ENV === "production" || process.env.VERCEL_ENV === "production") {
+    return [...remoteCandidates, ...localCandidates];
+  }
+
   return [...localCandidates, ...remoteCandidates];
 };
 
